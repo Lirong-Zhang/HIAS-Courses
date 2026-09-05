@@ -86,24 +86,58 @@ h1{font-size:25px;line-height:1.15;margin:3px 0 4px;letter-spacing:-.4px}
 .install{display:none;width:100%;border:0;background:var(--accent);color:#fff;border-radius:13px;padding:12px 14px;font-weight:800;margin-bottom:12px}
 @media(min-width:700px){.today-grid{display:grid;grid-template-columns:1.04fr .96fr;gap:12px}.today-grid .card{margin-bottom:0}.app{padding-top:22px}}
 
+
 .week-overview-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 8px}
 .week-overview-title b{font-size:13px}
 .week-overview-title span{font-size:10px;color:var(--muted)}
-.week-table-wrap{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:14px;background:#fff}
-.week-table{display:grid;grid-template-columns:58px repeat(7,92px);grid-template-rows:38px repeat(13,46px);min-width:702px;position:relative}
-.wt-head,.wt-period,.wt-cell{border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
-.wt-head{display:flex;align-items:center;justify-content:center;background:#f7f9fc;font-size:11px;font-weight:850;text-align:center;position:sticky;top:0;z-index:3}
-.wt-head.first{left:0;z-index:5}
-.wt-period{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fafbfe;position:sticky;left:0;z-index:2;font-size:9px;color:var(--muted);line-height:1.15}
-.wt-period b{font-size:11px;color:#3a465b;margin-bottom:2px}
+.week-table-wrap{
+  overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#fff
+}
+.week-table{
+  display:grid;
+  grid-template-columns:46px repeat(5,minmax(0,1fr));
+  grid-template-rows:34px repeat(13,34px);
+  width:100%;
+  position:relative
+}
+.wt-head,.wt-period,.wt-cell{
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+.wt-head{
+  display:flex;align-items:center;justify-content:center;background:#f7f9fc;
+  font-size:10px;font-weight:850;text-align:center;line-height:1.15;padding:2px
+}
+.wt-head small{display:block;font-size:9px;color:var(--muted);font-weight:700;margin-top:1px}
+.wt-period{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:#fafbfe;font-size:8px;color:var(--muted);line-height:1.1
+}
+.wt-period b{font-size:10px;color:#3a465b;margin-bottom:1px}
 .wt-cell{background:#fff}
-.wt-course{margin:2px;border-radius:8px;padding:5px;border:1px solid transparent;z-index:2;overflow:hidden;font-size:8px;line-height:1.12}
-.wt-course strong{display:block;font-size:9px;line-height:1.15;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.wt-course small{display:block;font-size:7px;opacity:.85;white-space:nowrap}
+.wt-course{
+  margin:1px;border-radius:8px;padding:4px 4px;border:1px solid transparent;
+  z-index:2;overflow:hidden;line-height:1.1
+}
+.wt-course strong{
+  display:block;font-size:10px;line-height:1.15;margin-bottom:2px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden
+}
+.wt-course .wt-kind{
+  display:inline-block;font-size:8px;font-weight:800;line-height:1;
+  padding:2px 4px;border-radius:999px;background:rgba(255,255,255,.7);margin-bottom:3px
+}
+.wt-course small{display:block;font-size:8px;opacity:.92;white-space:nowrap}
 .wt-course.degree{background:var(--accent-bg);color:#3455b8;border-color:#dce5ff}
 .wt-course.pubdegree{background:var(--green-bg);color:var(--green);border-color:#dbeee5}
 .wt-course.elect{background:var(--purple-bg);color:var(--purple);border-color:#e6def8}
-.week-table-hint{font-size:10px;color:var(--muted);margin-top:6px}
+.weekend-box{margin-top:10px;padding:10px 10px 4px;border:1px solid var(--line);border-radius:12px;background:#fbfcfe}
+.weekend-box h3{margin:0 0 7px;font-size:12px}
+.weekend-item{padding:8px 0;border-top:1px solid var(--line)}
+.weekend-item:first-of-type{border-top:0;padding-top:0}
+.weekend-item b{display:block;font-size:12px;margin-bottom:3px}
+.weekend-item span{display:block;font-size:10px;color:var(--muted);line-height:1.35}
+
 
 </style>
 </head>
@@ -162,14 +196,18 @@ h1{font-size:25px;line-height:1.15;margin:3px 0 4px;letter-spacing:-.4px}
   <div class="week-strip" id="weekStrip"></div>
   <div id="selectedDayCourses"></div>
 
-  <div class="week-overview-title">
+  
+<div class="week-overview-title">
     <b>整周课表</b>
     <span id="weekOverviewLabel">按当前查看周动态更新</span>
   </div>
   <div class="week-table-wrap">
     <div class="week-table" id="weekTable"></div>
   </div>
-  <div class="week-table-hint">左右滑动查看整周；切换上一周 / 下一周时，这张表会同步更新。</div>
+  <div class="weekend-box" id="weekendBox" style="display:none">
+    <h3>周末课程</h3>
+    <div id="weekendList"></div>
+  </div>
 </section>
 </div>
 
@@ -280,29 +318,51 @@ function renderViewWeekHeader(){
 }
 
 
+
+function shortType(type){
+  if(type.includes("核心课")) return "核心课";
+  if(type.includes("专业课")) return "专业课";
+  if(type.includes("公共学位课")) return "公共学位课";
+  if(type.includes("创新创业")) return "公共选修·创新";
+  if(type.includes("体育")) return "公共选修·体育";
+  return type.replace(" · ","·");
+}
+
 function renderWeekTable(){
   const table=document.getElementById("weekTable");
+  const weekendBox=document.getElementById("weekendBox");
+  const weekendList=document.getElementById("weekendList");
   const w=aw(viewStart);
   document.getElementById("weekOverviewLabel").textContent=w?`第 ${w} 周实际课程`:"非教学周";
   table.innerHTML="";
+  weekendList.innerHTML="";
+  weekendBox.style.display="none";
 
   const corner=document.createElement("div");
-  corner.className="wt-head first";
+  corner.className="wt-head";
   corner.style.gridColumn="1";
   corner.style.gridRow="1";
   corner.textContent="节次";
   table.appendChild(corner);
 
-  const names=["周一","周二","周三","周四","周五","周六","周日"];
-  for(let i=0;i<7;i++){
-    const d=new Date(viewStart); d.setDate(d.getDate()+i);
+  const headers=[
+    {day:1,name:"周一"},
+    {day:2,name:"周二"},
+    {day:3,name:"周三"},
+    {day:4,name:"周四"},
+    {day:5,name:"周五"},
+  ];
+
+  headers.forEach((item,i)=>{
+    const d=new Date(viewStart);
+    d.setDate(d.getDate()+i);
     const h=document.createElement("div");
     h.className="wt-head";
     h.style.gridColumn=String(i+2);
     h.style.gridRow="1";
-    h.innerHTML=`${names[i]}<br><span style="font-size:9px;color:var(--muted);font-weight:650">${d.getMonth()+1}/${d.getDate()}</span>`;
+    h.innerHTML=`${item.name}<small>${d.getMonth()+1}/${d.getDate()}</small>`;
     table.appendChild(h);
-  }
+  });
 
   for(let r=1;r<=13;r++){
     const p=document.createElement("div");
@@ -312,7 +372,7 @@ function renderWeekTable(){
     p.innerHTML=`<b>${r}</b><span>${pt[r][0]}</span>`;
     table.appendChild(p);
 
-    for(let c=0;c<7;c++){
+    for(let c=0;c<5;c++){
       const cell=document.createElement("div");
       cell.className="wt-cell";
       cell.style.gridColumn=String(c+2);
@@ -323,15 +383,32 @@ function renderWeekTable(){
 
   if(!w) return;
 
-  cs.filter(c=>c.weeks.includes(w)).forEach(c=>{
-    const col=c.day===0?8:c.day+1;
+  const active = cs.filter(c=>c.weeks.includes(w));
+
+  active.filter(c=>c.day>=1 && c.day<=5).forEach(c=>{
     const block=document.createElement("div");
     block.className=`wt-course ${c.cls}`;
-    block.style.gridColumn=String(col);
+    block.style.gridColumn=String(c.day+1);
     block.style.gridRow=`${c.start+1} / ${c.end+2}`;
-    block.innerHTML=`<strong>${c.name}</strong><small>${c.start}–${c.end}节</small><small>${ctime(c)}</small>`;
+    block.innerHTML=`
+      <div class="wt-kind">${shortType(c.type)}</div>
+      <strong>${c.name}</strong>
+      <small>${ctime(c)}</small>
+    `;
     table.appendChild(block);
   });
+
+  const weekend = active.filter(c=>c.day===6 || c.day===0).sort((a,b)=>a.day-b.day || a.start-b.start);
+  if(weekend.length){
+    weekendBox.style.display="block";
+    weekendList.innerHTML = weekend.map(c=>`
+      <div class="weekend-item">
+        <b>${c.day===6?"周六":"周日"} · ${c.name}</b>
+        <span>${ctime(c)} · ${c.start}–${c.end}节</span>
+        <span>${c.type}</span>
+      </div>
+    `).join("");
+  }
 }
 
 function renderStrip(){
