@@ -299,6 +299,10 @@ button{font:inherit}
 }
 .seg button.on{background:var(--accent-bg);border-color:var(--accent-line);color:var(--accent-dark)}
 .seg button:active{transform:scale(.98)}
+/* 版本标记：一行极小字，用来一眼确认手机上跑的是哪一版、系统当前是日夜模式、
+   以及本页正在请求的状态栏颜色。排查「状态栏不跟主题变」时全靠它定位。 */
+.ver{font-size:10px;line-height:1.7;color:var(--faint);margin:12px 0 0;font-variant-numeric:tabular-nums}
+.ver b{color:var(--muted);font-weight:800}
 
 .sheet-mask{
   position:fixed;inset:0;background:var(--mask);z-index:60;
@@ -496,6 +500,7 @@ button{font:inherit}
     <button type="button" data-mode="dark">深色</button>
   </div>
   <p class="note">选「跟随系统」时，会随着手机日夜模式自动换肤。你的选择会记住，下次打开还是它。</p>
+  <p class="ver" id="verLine"></p>
 </section>
 </main>
 
@@ -1243,6 +1248,8 @@ function tick(){
 }
 /* ============ 外观主题：跟随系统 / 浅色 / 深色 ============ */
 const THEME_KEY="hiasTheme";
+/* 版本号：每次发布都要和 sw.js 的 CACHE_NAME 一起 +1（页面上会显示，用来确认手机上的版本）。 */
+const APP_VER="v11";
 let themeMode="auto";
 try{const s=localStorage.getItem(THEME_KEY);if(s==="auto"||s==="light"||s==="dark")themeMode=s}catch(e){}
 const mqDark=window.matchMedia("(prefers-color-scheme: dark)");
@@ -1266,6 +1273,12 @@ function syncThemeUI(){
   if(sb)sb.setAttribute("content",r==="dark"?"black-translucent":"default");
   const badge=document.getElementById("themeBadge");
   if(badge)badge.textContent=(themeMode==="auto"?"跟随系统 · ":"")+(r==="dark"?"深色":"浅色");
+  // 版本自检行：手机上跑的是哪一版 / 系统日夜模式 / 本页请求的状态栏颜色。
+  // 若这里显示的颜色已经是深色而状态栏仍是浅色，就说明那层「App 壳」不吃这条设置。
+  const ver=document.getElementById("verLine");
+  if(ver)ver.innerHTML="版本 <b>"+APP_VER+"</b> · "+(r==="dark"?"暗夜金":"象牙金")
+    +" · 系统"+(mqDark.matches?"深色模式":"浅色模式")
+    +" · 状态栏 "+(meta.getAttribute("content")||"—");
   document.querySelectorAll("#themeSeg button").forEach(b=>{
     b.classList.toggle("on",b.dataset.mode===themeMode);
   });
@@ -1304,6 +1317,16 @@ installBtn.addEventListener("click",async()=>{if(!deferredPrompt)return;deferred
 
 // service worker
 if("serviceWorker" in navigator){
+  // 进来时是否已经有 SW 在管：用来区分「第一次装」和「版本更新」。
+  const hadController=!!navigator.serviceWorker.controller;
+  let reloaded=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    // 新版 SW 接管后自动刷新一次。否则要「关掉 App 重开」两次才能看到新版本，
+    // 很容易误以为「改了但没生效」。首次安装时 hadController 为假，跳过，不做多余重载。
+    if(!hadController||reloaded)return;
+    reloaded=true;
+    location.reload();
+  });
   window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
 }
 })();
