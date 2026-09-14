@@ -99,10 +99,27 @@ button{font:inherit}
 .wx-h .t{display:block;font-size:11.5px;font-weight:850;font-variant-numeric:tabular-nums}
 .wx-h .p{display:block;font-size:9px;color:var(--faint);min-height:11px;font-variant-numeric:tabular-nums}
 .wx-h .p.wet{color:var(--rain);font-weight:800}
-.wx-tips{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+/* 今天/明天温度走势：两行共用同一刻度，条形长度直接可比 */
+.wx-days{display:grid;gap:7px;margin-top:12px;padding-top:11px;border-top:1px solid var(--line)}
+.wx-day{display:grid;grid-template-columns:30px 18px minmax(0,1fr) auto;gap:9px;align-items:center}
+.wx-day .dl{font-size:11px;color:var(--muted);font-weight:700}
+.wx-day svg{width:18px;height:18px;display:block}
+.wx-day .db{position:relative;height:6px;border-radius:999px;background:var(--surface-3)}
+.wx-day .db i{position:absolute;top:0;bottom:0;border-radius:999px;background:linear-gradient(90deg,var(--rain),var(--sky))}
+.wx-day .db i.tmr{opacity:.55}
+.wx-day .dv{font-size:11.5px;font-weight:850;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wx-day .dv em{font-style:normal;font-size:10.5px;font-weight:700;margin-left:5px;color:var(--muted)}
+.wx-day .dv em.up{color:var(--warn)}
+.wx-day .dv em.down{color:var(--rain)}
+.wx-tips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:11px}
 .wx-tip{font-size:10.5px;font-weight:700;padding:5px 9px;border-radius:999px;background:var(--surface-3);color:var(--muted)}
 .wx-tip b{color:var(--muted);font-weight:800;margin-right:4px}
-.wx-tip.wet{background:var(--rain-bg);color:var(--rain-strong)}
+/* 出行建议：一句自然的话，不再是「记得带伞 / 不用带伞」这种固定标签 */
+.wx-advice{display:flex;align-items:center;gap:6px;flex:1 1 auto;min-width:0;font-size:11.5px;line-height:1.55;color:var(--muted)}
+.wx-advice svg{width:15px;height:15px;flex:0 0 auto;opacity:.9}
+.wx-advice.wet{color:var(--rain-strong)}
+.wx-advice.warm{color:var(--warn)}
+.wx-advice.cool{color:var(--rain-strong)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:15px;margin-bottom:12px;box-shadow:var(--shadow)}
 .hero{padding:16px;background:linear-gradient(168deg,var(--hero-a) 0%,var(--hero-b) 100%)}
 .hero-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center}
@@ -377,6 +394,7 @@ button{font:inherit}
     </div>
   </div>
   <div class="wx-strip" id="wxStrip"></div>
+  <div class="wx-days" id="wxDays"></div>
   <div class="wx-tips" id="wxTips"></div>
 </section>
 
@@ -1074,6 +1092,15 @@ function wxClothTip(app){
   return "羽绒服，注意保暖";
 }
 
+function wxPeriod(hour){
+  if(hour>=5&&hour<11)return "上午";
+  if(hour>=11&&hour<13)return "中午";
+  if(hour>=13&&hour<17)return "下午";
+  if(hour>=17&&hour<19)return "傍晚";
+  if(hour>=19&&hour<24)return "晚上";
+  return "凌晨";
+}
+
 function renderWeather(d){
   const cur=d.current,h=d.hourly,dy=d.daily;
   if(!cur||!h)throw new Error("bad payload");
@@ -1099,27 +1126,63 @@ function renderWeather(d){
   }
   document.getElementById("wxStrip").innerHTML=strip;
 
-  let pop=0;
-  for(let k=0;k<=10;k++){
+  // 未来 12 小时里降雨概率的峰值，用来回答「什么时候会下」，而不是丢一句干巴巴的结论
+  let peakPop=0,peakAt=i;
+  for(let k=0;k<=12;k++){
     const j=i+k;
-    if(j<h.time.length&&h.precipitation_probability&&h.precipitation_probability[j]!=null)
-      pop=Math.max(pop,h.precipitation_probability[j]);
+    if(j<h.time.length&&h.precipitation_probability&&h.precipitation_probability[j]!=null){
+      const p=h.precipitation_probability[j];
+      if(p>peakPop){peakPop=p;peakAt=j}
+    }
   }
-  if(dy&&dy.precipitation_probability_max&&dy.precipitation_probability_max[0]!=null)
-    pop=Math.max(pop,dy.precipitation_probability_max[0]);
 
+  // ---- 今天 / 明天 温度走势：两行共用同一刻度，条形长短可直接比较 ----
+  const dmax=k=>(dy&&dy.temperature_2m_max&&dy.temperature_2m_max[k]!=null)?Math.round(dy.temperature_2m_max[k]):null;
+  const dmin=k=>(dy&&dy.temperature_2m_min&&dy.temperature_2m_min[k]!=null)?Math.round(dy.temperature_2m_min[k]):null;
+  const dcode=k=>(dy&&dy.weather_code&&dy.weather_code[k]!=null)?dy.weather_code[k]:code;
+  const tHi=dmax(0),tLo=dmin(0),mHi=dmax(1),mLo=dmin(1);
+  const bars=[tLo,tHi,mLo,mHi].filter(v=>v!=null);
+  const scaleLo=bars.length?Math.min.apply(null,bars):0;
+  const scaleHi=bars.length?Math.max.apply(null,bars):1;
+  const span=Math.max(1,scaleHi-scaleLo);
+  const pct=v=>(v-scaleLo)/span*100;
+
+  let dayRows="";
+  if(tLo!=null&&tHi!=null){
+    dayRows+='<div class="wx-day"><span class="dl">今天</span>'+wxIconSvg(wxKind(code))
+      +'<span class="db"><i style="left:'+pct(tLo).toFixed(1)+'%;width:'+Math.max(6,pct(tHi)-pct(tLo)).toFixed(1)+'%"></i></span>'
+      +'<span class="dv">'+tLo+'° ~ '+tHi+'°</span></div>';
+  }
+  if(mLo!=null&&mHi!=null){
+    let d="";
+    if(tHi!=null){
+      const diff=mHi-tHi;
+      d=diff===0?'<em>与今天持平</em>'
+        :(diff>0?'<em class="up">↑'+diff+'°</em>':'<em class="down">↓'+Math.abs(diff)+'°</em>');
+    }
+    dayRows+='<div class="wx-day"><span class="dl">明天</span>'+wxIconSvg(wxKind(dcode(1)))
+      +'<span class="db"><i class="tmr" style="left:'+pct(mLo).toFixed(1)+'%;width:'+Math.max(6,pct(mHi)-pct(mLo)).toFixed(1)+'%"></i></span>'
+      +'<span class="dv">'+mLo+'° ~ '+mHi+'°'+d+'</span></div>';
+  }
+  document.getElementById("wxDays").innerHTML=dayRows;
+
+  // ---- 出行建议：一句随天气变化的白话，不再用「记得带伞 / 不用带伞」这种固定标签 ----
   const raining=(code>=51&&code<=67)||(code>=80&&code<=82)||(code>=95);
-  let umb,wet=false;
-  if(raining||pop>=60){umb="记得带伞";wet=true}
-  else if(pop>=30){umb="可能下雨，带上更稳";wet=true}
-  else umb="不用带伞";
+  const app=Math.round(cur.apparent_temperature);
+  const drop=(tHi!=null&&mHi!=null)?tHi-mHi:0;
+  let ad;
+  if(raining) ad={t:"外面正在下雨，出门记得带把伞。",k:"wet"};
+  else if(peakPop>=60) ad={t:(peakAt<=i?"接下来":wxPeriod(+String(h.time[peakAt]).slice(11,13))+"起")+"雨的概率升到 "+peakPop+"%，伞带上更稳。",k:"wet"};
+  else if(drop>=5) ad={t:"明天比今天低 "+drop+"°，外套提前备好。",k:"cool"};
+  else if(peakPop>=30) ad={t:"今天有阵雨的可能（"+peakPop+"%），带把折叠伞更安心。",k:"wet"};
+  else if(app>=30) ad={t:"今天偏热，多喝水、注意防晒。",k:"warm"};
+  else if(app<=5) ad={t:"挺冷的，注意保暖别着凉。",k:"cool"};
+  else ad={t:"天气平顺，出门没什么要特别留意的。",k:""};
 
-  const hi=dy&&dy.temperature_2m_max?Math.round(dy.temperature_2m_max[0]):null;
-  const lo=dy&&dy.temperature_2m_min?Math.round(dy.temperature_2m_min[0]):null;
+  const aIcon=wxIconSvg(ad.k==="wet"?"rain":(ad.k==="warm"?"sun":(ad.k==="cool"?"cloud":"suncloud")));
   document.getElementById("wxTips").innerHTML=
     '<span class="wx-tip"><b>穿衣</b>'+esc(wxClothTip(cur.apparent_temperature))+'</span>'
-   +'<span class="wx-tip'+(wet?" wet":"")+'"><b>带伞</b>'+umb+'</span>'
-   +(hi!=null&&lo!=null?'<span class="wx-tip"><b>今日</b>'+lo+'° ~ '+hi+'°</span>':"");
+   +'<span class="wx-advice'+(ad.k?" "+ad.k:"")+'">'+aIcon+esc(ad.t)+'</span>';
 }
 
 function wxFail(){
@@ -1127,6 +1190,7 @@ function wxFail(){
   document.getElementById("wxTemp").textContent="--°";
   document.getElementById("wxDesc").textContent="天气未取到";
   document.getElementById("wxStrip").innerHTML="";
+  document.getElementById("wxDays").innerHTML="";
   document.getElementById("wxTips").innerHTML='<span class="wx-tip">天气暂时取不到，联网后会自动重试</span>';
 }
 

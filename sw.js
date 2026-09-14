@@ -1,8 +1,7 @@
-const CACHE_NAME = "my-schedule-v8";
+const CACHE_NAME = "my-schedule-v9";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png"
@@ -31,6 +30,13 @@ self.addEventListener("fetch", event => {
   let url;
   try { url = new URL(req.url); } catch (e) { return; }
   if (url.origin !== self.location.origin) return;
+
+  // manifest 永远走网络：安卓拿它做 WebAPK 更新检查（状态栏颜色、名称、图标都靠它），
+  // 一旦被缓存命中，装好的 App 会长期停留在旧配置上。
+  if (/manifest\.webmanifest$/.test(url.pathname)) {
+    event.respondWith(fetch(req).catch(() => caches.match(req)));
+    return;
+  }
 
   event.respondWith(
     fetch(req)
