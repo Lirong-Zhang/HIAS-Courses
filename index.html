@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#4169e1">
+<meta name="theme-color" content="#f4f6fa">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="我的课表">
@@ -19,10 +19,14 @@
   --warn:#9a631d;--warn-bg:#fff6e7;--shadow:0 8px 24px rgba(31,44,75,.06);
 }
 *{box-sizing:border-box}
-html{background:var(--bg)}
+html{background:var(--bg);-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
 button{font:inherit}
-.app{max-width:760px;margin:auto;padding:12px 12px calc(28px + env(safe-area-inset-bottom))}
+/* 全面屏安全区：顶(状态栏/挖孔) 右 底(小白条) 左 —— 四边都避让 */
+.app{
+  max-width:760px;margin:auto;
+  padding:calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left))
+}
 .top{display:flex;justify-content:space-between;gap:12px;padding:8px 2px 12px;align-items:flex-start}
 .eyebrow{font-size:12px;color:var(--muted);font-weight:700}
 h1{font-size:25px;line-height:1.15;margin:3px 0 4px;letter-spacing:-.4px}
@@ -38,7 +42,8 @@ h1{font-size:25px;line-height:1.15;margin:3px 0 4px;letter-spacing:-.4px}
 }
 .progress{height:6px;background:#edf0f5;border-radius:999px;margin-top:13px;overflow:hidden}
 .progress>span{display:block;height:100%;background:var(--accent);border-radius:999px;width:0}
-.nowbox{margin-top:12px;padding:13px;border-radius:15px;background:linear-gradient(135deg,#eef3ff,#f7f9ff);border:1px solid #dfe7ff}
+.nowbox{margin-top:12px;padding:13px;border-radius:15px;background:linear-gradient(135deg,#eef3ff,#f7f9ff);border:1px solid #dfe7ff;cursor:pointer;transition:transform .12s,filter .12s}
+.nowbox:active{transform:scale(.99);filter:brightness(.98)}
 .nowbox .label{font-size:11px;color:var(--muted);font-weight:800}
 .nowbox .title{font-size:18px;font-weight:850;margin-top:3px;line-height:1.3}
 .nowbox .meta{font-size:12px;color:var(--muted);margin-top:4px}
@@ -84,21 +89,38 @@ h1{font-size:25px;line-height:1.15;margin:3px 0 4px;letter-spacing:-.4px}
 .note{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:0}
 .offline{display:none;margin-bottom:12px;padding:9px 12px;border-radius:12px;background:var(--warn-bg);color:var(--warn);font-size:12px;font-weight:700}
 .install{display:none;width:100%;border:0;background:var(--accent);color:#fff;border-radius:13px;padding:12px 14px;font-weight:800;margin-bottom:12px}
-@media(min-width:700px){.today-grid{display:grid;grid-template-columns:1.04fr .96fr;gap:12px}.today-grid .card{margin-bottom:0}.app{padding-top:22px}}
+/* 宽屏：今天 / 本周查看 全部整行铺满。
+   原因：整周课表有 7 列，两栏并排会把它压成半宽（约 330px），
+   网格项默认 min-width:auto 还会把页面撑出横向滚动条 —— 手机转横屏时必现。 */
+@media(min-width:700px){
+  .today-grid{display:block}
+  .today-grid .card{margin-bottom:12px}
+  .app{padding-top:calc(22px + env(safe-area-inset-top))}
+}
 
 
-.week-overview-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 8px}
-.week-overview-title b{font-size:13px}
-.week-overview-title span{font-size:10px;color:var(--muted)}
+.week-overview-title{display:flex;align-items:center;gap:8px;margin:14px 0 8px}
+.week-overview-title b{font-size:13px;white-space:nowrap}
+.week-overview-title span{flex:1;min-width:0;text-align:right;font-size:10px;color:var(--muted)}
+.week-overview-title button{
+  flex:0 0 auto;border:1px solid var(--line);background:#fff;color:var(--accent-dark);
+  border-radius:999px;padding:6px 12px;font-size:11px;font-weight:800;white-space:nowrap
+}
+.week-overview-title button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .week-table-wrap{
-  overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#fff
+  overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
+  border:1px solid var(--line);border-radius:14px;background:#fff
 }
 .week-table{
   display:grid;
-  grid-template-columns:46px repeat(5,minmax(0,1fr));
-  grid-template-rows:34px repeat(13,34px);
-  width:100%;
-  position:relative
+  grid-template-columns:40px repeat(7,minmax(0,1fr));
+  grid-template-rows:34px repeat(13,30px);
+  position:relative;min-width:100%
+}
+.week-table.wide{
+  grid-template-columns:46px repeat(7,86px);
+  grid-template-rows:34px repeat(13,38px);
+  width:648px;min-width:100%
 }
 .wt-head,.wt-period,.wt-cell{
   border-right:1px solid var(--line);
@@ -109,6 +131,11 @@ h1{font-size:25px;line-height:1.15;margin:3px 0 4px;letter-spacing:-.4px}
   font-size:10px;font-weight:850;text-align:center;line-height:1.15;padding:2px
 }
 .wt-head small{display:block;font-size:9px;color:var(--muted);font-weight:700;margin-top:1px}
+.wt-head.is-today{background:var(--accent-bg);color:var(--accent-dark)}
+.wt-head.is-today small{color:var(--accent-dark)}
+.week-table.wide .wt-period,.week-table.wide .wt-head.corner{
+  position:sticky;left:0;z-index:4;box-shadow:1px 0 0 var(--line)
+}
 .wt-period{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:#fafbfe;font-size:8px;color:var(--muted);line-height:1.1
@@ -116,29 +143,118 @@ h1{font-size:25px;line-height:1.15;margin:3px 0 4px;letter-spacing:-.4px}
 .wt-period b{font-size:10px;color:#3a465b;margin-bottom:1px}
 .wt-cell{background:#fff}
 .wt-course{
-  margin:1px;border-radius:8px;padding:4px 4px;border:1px solid transparent;
-  z-index:2;overflow:hidden;line-height:1.1
+  margin:1px;border-radius:8px;padding:3px 4px;border:1px solid transparent;
+  z-index:2;overflow:hidden;line-height:1.15;cursor:pointer;
+  display:flex;flex-direction:column;gap:2px;
+  transition:transform .12s,filter .12s
 }
-.wt-course strong{
-  display:block;font-size:10px;line-height:1.15;margin-bottom:2px;
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden
-}
+.wt-course:active{transform:scale(.97);filter:brightness(.96)}
+/* 课名字号随屏宽连续缩放：窄屏自动收小，保证长课名（如"并行计算与实现技术"）
+   在两节连排的格子里能完整放下；≥396px 时保持 9.5px 不变 */
+.wt-course .wt-name{font-size:9.5px;font-size:clamp(8px,2.4vw,9.5px);font-weight:850;letter-spacing:-.2px;word-break:break-all;line-height:1.15}
 .wt-course .wt-kind{
-  display:inline-block;font-size:8px;font-weight:800;line-height:1;
-  padding:2px 4px;border-radius:999px;background:rgba(255,255,255,.7);margin-bottom:3px
+  align-self:flex-start;font-size:8px;font-weight:800;line-height:1;
+  padding:2px 4px;border-radius:999px;background:rgba(255,255,255,.75)
 }
-.wt-course small{display:block;font-size:8px;opacity:.92;white-space:nowrap}
+.wt-course .wt-meta{font-size:8.5px;opacity:.95;line-height:1.2;white-space:nowrap}
+.wt-course .wt-loc{font-size:8.5px;opacity:.95;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wt-course .wt-locshort{display:none;font-size:8.5px;opacity:.95;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wt-course.degree{background:var(--accent-bg);color:#3455b8;border-color:#dce5ff}
 .wt-course.pubdegree{background:var(--green-bg);color:var(--green);border-color:#dbeee5}
 .wt-course.elect{background:var(--purple-bg);color:var(--purple);border-color:#e6def8}
-.weekend-box{margin-top:10px;padding:10px 10px 4px;border:1px solid var(--line);border-radius:12px;background:#fbfcfe}
-.weekend-box h3{margin:0 0 7px;font-size:12px}
-.weekend-item{padding:8px 0;border-top:1px solid var(--line)}
-.weekend-item:first-of-type{border-top:0;padding-top:0}
-.weekend-item b{display:block;font-size:12px;margin-bottom:3px}
-.weekend-item span{display:block;font-size:10px;color:var(--muted);line-height:1.35}
+.table-hint{font-size:11px;color:var(--muted);line-height:1.6;margin:9px 0 0}
+.course{cursor:pointer;transition:transform .12s,filter .12s}
+.course:active{transform:scale(.99);filter:brightness(.98)}
+.mini-course{cursor:pointer}
+.mini-course span{display:block;font-size:11px;color:var(--muted);line-height:1.45}
+.course-index{display:grid;gap:8px}
+.ci-item{
+  display:grid;grid-template-columns:9px minmax(0,1fr) 14px;gap:11px;align-items:center;
+  border:1px solid var(--line);border-radius:13px;padding:11px 12px;background:#fff;
+  cursor:pointer;transition:transform .12s,filter .12s
+}
+.ci-item:active{transform:scale(.99);filter:brightness(.98)}
+.ci-dot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+.ci-txt{min-width:0}
+.ci-txt b{display:block;font-size:13.5px;line-height:1.3;margin-bottom:3px}
+.ci-txt span{display:block;font-size:11px;color:var(--muted);line-height:1.45}
+.ci-arrow{color:#b7c0cf;font-size:15px;text-align:right}
+@media(min-width:700px){
+  .week-table{grid-template-columns:50px repeat(7,minmax(0,1fr));grid-template-rows:36px repeat(13,38px)}
+  .week-table.wide{grid-template-columns:50px repeat(7,92px);width:694px}
+  .week-overview-title span{font-size:11px}
+  .wt-course .wt-name{font-size:10.5px}
+  .wt-course .wt-kind{font-size:8.5px}
+  .wt-course .wt-meta,.wt-course .wt-loc,.wt-course .wt-locshort{font-size:9px}
+  .wt-course .wt-locshort{display:block}
+}
 
-
+.sheet-mask{
+  position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:60;
+  opacity:0;pointer-events:none;transition:opacity .22s ease
+}
+.sheet-mask.on{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:61;background:var(--card);
+  border-radius:20px 20px 0 0;max-height:88vh;display:flex;flex-direction:column;
+  transform:translateY(104%);transition:transform .26s cubic-bezier(.2,.8,.2,1);
+  box-shadow:0 -14px 44px rgba(20,30,60,.22)
+}
+.sheet.on{transform:translateY(0)}
+.sheet-grip{width:42px;height:4px;border-radius:999px;background:#d8dee9;margin:8px auto 0;flex:0 0 auto}
+.sheet-head{
+  display:flex;justify-content:space-between;gap:12px;align-items:flex-start;
+  padding:9px calc(16px + env(safe-area-inset-right)) 12px calc(16px + env(safe-area-inset-left));
+  border-bottom:1px solid var(--line);flex:0 0 auto
+}
+.sheet-head-txt{min-width:0}
+.sheet-head h2{margin:0;font-size:17px;line-height:1.25;letter-spacing:-.3px}
+.sheet-sub{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
+.sheet-close{
+  flex:0 0 auto;border:0;background:#f1f3f7;color:#4a5568;
+  border-radius:999px;padding:7px 13px;font-size:12px;font-weight:800
+}
+.sheet-body{
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:14px calc(16px + env(safe-area-inset-right)) calc(22px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))
+}
+/* 浏览器里打开时 vh 会按"工具栏隐藏后"的高度算，抽屉底部可能被工具栏盖住 → 用 dvh 兜底 */
+@supports (height:100dvh){.sheet{max-height:88dvh}}
+.now-card{
+  border:1px solid #dde6ff;background:var(--accent-bg);color:var(--accent-dark);
+  border-radius:14px;padding:12px 13px;margin-bottom:14px
+}
+.now-card .nc-k{font-size:10px;font-weight:850;opacity:.85}
+.now-card .nc-t{font-size:15px;font-weight:850;margin-top:3px;line-height:1.3}
+.now-card .nc-m{font-size:12px;margin-top:3px;font-weight:700}
+.now-card .nc-l{font-size:12px;margin-top:2px}
+.sheet-body .row{display:grid;grid-template-columns:86px minmax(0,1fr);gap:11px;padding:11px 0;border-top:1px solid var(--line)}
+.sheet-body .row:first-child{border-top:0;padding-top:0}
+.sheet-body .k{font-size:11px;color:var(--muted);font-weight:800;line-height:1.5}
+.sheet-body .v{font-size:12.5px;line-height:1.65;color:var(--text)}
+.sheet-body .v em{font-style:normal;color:var(--muted)}
+.ent{padding:7px 0;border-top:1px dashed var(--line)}
+.ent:first-child{border-top:0;padding-top:0}
+.ent b{display:block;font-size:12.5px}
+.ent span{display:block;font-size:11px;color:var(--muted);line-height:1.45;margin-top:2px}
+.sheet-body details{border:1px solid var(--line);border-radius:11px;background:#fcfdff;margin-bottom:7px;overflow:hidden}
+.sheet-body details:last-child{margin-bottom:0}
+.sheet-body summary{
+  display:flex;justify-content:space-between;gap:10px;align-items:baseline;
+  padding:10px 11px;font-size:12.5px;font-weight:800;cursor:pointer;list-style:none
+}
+.sheet-body summary::-webkit-details-marker{display:none}
+.sheet-body summary em{font-style:normal;font-size:10.5px;color:var(--muted);font-weight:700;white-space:nowrap}
+.sheet-body details[open] summary{border-bottom:1px solid var(--line);background:#f7f9fc}
+.secs{padding:8px 11px 10px}
+.sec{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:4px 0;font-size:12px;line-height:1.5}
+.sec span{min-width:0}
+.sec em{font-style:normal;font-size:10.5px;color:var(--muted);font-weight:700;white-space:nowrap}
+.sheet-foot{font-size:11px;color:var(--muted);margin-top:16px;line-height:1.6}
+@media(min-width:700px){
+  .sheet{left:50%;right:auto;width:660px;bottom:22px;border-radius:20px;transform:translate(-50%,104%)}
+  .sheet.on{transform:translate(-50%,0)}
+}
 </style>
 </head>
 <body>
@@ -165,7 +281,7 @@ h1{font-size:25px;line-height:1.15;margin:3px 0 4px;letter-spacing:-.4px}
   </div>
   <div class="progress" aria-label="学期进度"><span id="termProgress"></span></div>
 
-  <div class="nowbox">
+  <div class="nowbox" id="nowBox">
     <div class="label">当前状态</div>
     <div class="title" id="nowTitle">正在计算…</div>
     <div class="meta" id="nowMeta"></div>
@@ -200,16 +316,20 @@ h1{font-size:25px;line-height:1.15;margin:3px 0 4px;letter-spacing:-.4px}
 <div class="week-overview-title">
     <b>整周课表</b>
     <span id="weekOverviewLabel">按当前查看周动态更新</span>
+    <button id="tableModeBtn" type="button">横屏</button>
   </div>
-  <div class="week-table-wrap">
+  <div class="week-table-wrap" id="weekTableWrap">
     <div class="week-table" id="weekTable"></div>
   </div>
-  <div class="weekend-box" id="weekendBox" style="display:none">
-    <h3>周末课程</h3>
-    <div id="weekendList"></div>
-  </div>
+  <p class="table-hint" id="tableHint"></p>
 </section>
 </div>
+
+<section class="card">
+  <div class="section-title"><h2>全部课程</h2><span class="badge" id="allCourseBadge">8 门</span></div>
+  <div class="course-index" id="courseIndex"></div>
+  <p class="note">点任意一门课，可以查看课程编码、教学大纲、教材和教师简介。</p>
+</section>
 
 <section class="card">
   <div class="section-title"><h2>课程类型</h2></div>
@@ -220,29 +340,205 @@ h1{font-size:25px;line-height:1.15;margin:3px 0 4px;letter-spacing:-.4px}
   </div>
   <p class="note">
     页面直接读取手机当前日期和时间，自动判断教学周、今天课程、当前课程和下一门课。<br>
+    课表格子可以直接点开看课程详情；右上角「横屏」可以展开更宽、信息更全的表格。<br>
     秋季课表按当前方案录入；以后最终改课，只需要修改课程数据并重新发布即可。
   </p>
 </section>
 </main>
 
+<div class="sheet-mask" id="sheetMask"></div>
+<section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet-grip" id="sheetGrip"></div>
+  <div class="sheet-head">
+    <div class="sheet-head-txt">
+      <h2 id="sheetTitle"></h2>
+      <div class="sheet-sub" id="sheetSub"></div>
+    </div>
+    <button class="sheet-close" id="sheetClose" type="button">关闭</button>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</section>
+
 <script>
 (()=>{
 const TERM_START=new Date(2026,7,31),TERM_END=new Date(2027,0,17),DAY=86400000;
 const pt={1:["08:30","09:15"],2:["09:20","10:05"],3:["10:25","11:10"],4:["11:15","12:00"],5:["13:30","14:15"],6:["14:20","15:05"],7:["15:25","16:10"],8:["16:15","17:00"],9:["17:05","17:50"],10:["18:30","19:15"],11:["19:20","20:05"],12:["20:15","21:00"],13:["21:05","21:50"]};
-const w3_5_7_18=[3,4,5,...Array.from({length:12},(_,i)=>i+7)],w11_20=Array.from({length:10},(_,i)=>i+11),w9_17_19=[...Array.from({length:9},(_,i)=>i+9),19],w6_14=Array.from({length:9},(_,i)=>i+6),w7_11_14_17=[7,8,9,10,11,14,15,16,17],w3_5_7_13=[3,4,5,7,8,9,10,11,12,13];
+const w3_5_7_18=[3,4,5,...Array.from({length:12},(_,i)=>i+7)],w11_20=Array.from({length:10},(_,i)=>i+11),w9_17_19=[...Array.from({length:9},(_,i)=>i+9),19],w6_14=Array.from({length:9},(_,i)=>i+6),w7_11_14_17=[7,8,9,10,11,14,15,16,17],w4_5_7_14=[4,5,...Array.from({length:8},(_,i)=>i+7)];
 const cs=[
-{name:"自然语言处理",day:1,start:1,end:3,weeks:w11_20,credits:3,type:"专业学位课 · 核心课",cls:"degree"},
-{name:"自然语言处理",day:3,start:6,end:8,weeks:w11_20,credits:3,type:"专业学位课 · 核心课",cls:"degree"},
-{name:"计算机体系结构",day:1,start:10,end:11,weeks:w3_5_7_18,credits:3,type:"专业学位课 · 核心课",cls:"degree"},
-{name:"计算机体系结构",day:2,start:1,end:2,weeks:w3_5_7_18,credits:3,type:"专业学位课 · 核心课",cls:"degree"},
-{name:"并行计算与实现技术",day:4,start:10,end:11,weeks:w9_17_19,credits:2,type:"专业学位课 · 专业课",cls:"degree"},
-{name:"并行计算与实现技术",day:5,start:1,end:2,weeks:w9_17_19,credits:2,type:"专业学位课 · 专业课",cls:"degree"},
-{name:"高级数据库系统",day:2,start:12,end:13,weeks:w11_20,credits:2,type:"专业学位课 · 专业课",cls:"degree"},
-{name:"高级数据库系统",day:3,start:3,end:4,weeks:w11_20,credits:2,type:"专业学位课 · 专业课",cls:"degree"},
-{name:"新时代中国特色社会主义理论与实践",day:5,start:5,end:8,weeks:w6_14,credits:2,type:"公共学位课",cls:"pubdegree"},
-{name:"自然辩证法概论",day:6,start:1,end:4,weeks:w7_11_14_17,credits:1,type:"公共学位课",cls:"pubdegree"},
-{name:"创业融资入门",day:1,start:5,end:7,weeks:w3_5_7_13,credits:1,type:"公共选修课 · 创新创业",cls:"elect"},
-{name:"网球-02班",day:2,start:3,end:4,weeks:w3_5_7_18,credits:.5,type:"公共选修课 · 体育",cls:"elect"}];
+{id:"nlp",name:"自然语言处理",day:1,start:1,end:3,weeks:w11_20,credits:3,type:"专业学位课 · 核心课",cls:"degree",loc:"5号楼4层多功能厅",locShort:"5号楼4F"},
+{id:"nlp",name:"自然语言处理",day:3,start:6,end:8,weeks:w11_20,credits:3,type:"专业学位课 · 核心课",cls:"degree",loc:"5号楼4层多功能厅",locShort:"5号楼4F"},
+{id:"arch",name:"计算机体系结构",day:1,start:10,end:11,weeks:w3_5_7_18,credits:3,type:"专业学位课 · 核心课",cls:"degree",loc:"13-211",locShort:"13-211"},
+{id:"arch",name:"计算机体系结构",day:2,start:1,end:2,weeks:w3_5_7_18,credits:3,type:"专业学位课 · 核心课",cls:"degree",loc:"13-211",locShort:"13-211"},
+{id:"hpc",name:"并行计算与实现技术",day:4,start:10,end:11,weeks:w9_17_19,credits:2,type:"专业学位课 · 专业课",cls:"degree",loc:"13-310",locShort:"13-310"},
+{id:"hpc",name:"并行计算与实现技术",day:5,start:1,end:2,weeks:w9_17_19,credits:2,type:"专业学位课 · 专业课",cls:"degree",loc:"13-310",locShort:"13-310"},
+{id:"db",name:"高级数据库系统",day:2,start:12,end:13,weeks:w11_20,credits:2,type:"专业学位课 · 专业课",cls:"degree",loc:"13-310",locShort:"13-310"},
+{id:"db",name:"高级数据库系统",day:3,start:3,end:4,weeks:w11_20,credits:2,type:"专业学位课 · 专业课",cls:"degree",loc:"13-305",locShort:"13-305"},
+{id:"marx",name:"新时代中国特色社会主义理论与实践",day:5,start:5,end:8,weeks:w6_14,credits:2,type:"公共学位课",cls:"pubdegree",loc:"5号楼4层多功能厅",locShort:"5号楼4F"},
+{id:"dialectic",name:"自然辩证法概论",day:6,start:1,end:4,weeks:w7_11_14_17,credits:1,type:"公共学位课",cls:"pubdegree",loc:"文体中心3楼报告厅",locShort:"文体中心3F"},
+{id:"startup",name:"创业融资入门",day:1,start:5,end:7,weeks:w4_5_7_14,credits:1,type:"公共选修课 · 创新创业",cls:"elect",loc:"13-111",locShort:"13-111"},
+{id:"tennis",name:"网球-02班",day:2,start:3,end:4,weeks:w3_5_7_18,credits:.5,type:"公共选修课 · 体育",cls:"elect",loc:"网球场",locShort:"网球场"}];
+
+const ORDER=["nlp","arch","hpc","db","marx","dialectic","startup","tennis"];
+
+const DETAILS={
+nlp:{
+  name:"自然语言处理",code:"280216085404P2009",en:"Natural Language Processing",
+  hours:60,credits:3,attr:"专业核心课",teacher:"李太豪等",
+  pre:"概率论与数理统计、算法分析与程序设计、Python 编程。",
+  goal:"本课程为计算机学科研究生的专业核心课。本课程讲授和讨论自然语言处理前沿研究领域的主要思想和关键技术。主要内容包括基础机器学习模型、隐马尔可夫模型、语言模型、神经网络、强化学习、词法分析、句法分析、生成式模型、大规模语言模型以及 ChatGPT 等。通过本课程的学习，希望学生能了解自然语言处理前沿研究领域，了解人类语言技术的最新研究成果，掌握基本思想和关键技术，培养学生自然语言处理相关技术的研究能力。",
+  outline:[
+    {h:"第一章 课程概述及相关基础",hrs:6,t:"李太豪",secs:[{n:"第一节 课程介绍"},{n:"第二节 自然语言处理概述"},{n:"第三节 数学基础"}]},
+    {h:"第二章 自然语言处理中的机器学习",hrs:19,t:"刘书朋",secs:[{n:"第一节 隐马尔可夫模型"},{n:"第二节 线性模型"},{n:"第三节 对数线性模型"},{n:"第四节 神经网络"},{n:"第五节 图模型"},{n:"第六节 强化学习"}]},
+    {h:"第三章 自然语言处理基础技术",hrs:11,t:"刘书朋",secs:[{n:"第一节 分类与聚类"},{n:"第二节 语言模型"},{n:"第三节 词法分析"},{n:"第四节 句法分析"},{n:"第五节 语义分析"}]},
+    {h:"第四章 自然语言处理应用",hrs:11,t:"刘书朋",secs:[{n:"第一节 机器翻译"},{n:"第二节 对话系统"},{n:"第三节 文本摘要"},{n:"第四节 问答系统"},{n:"第五节 信息抽取"}]},
+    {h:"第五章 自然语言处理前沿技术",hrs:13,t:"刘书朋",secs:[{n:"第一节 大规模语言模型"},{n:"第二节 ChatGPT 与 GPT-4"},{n:"第三节 大语言模型分析与实践"},{n:"第四节 前沿动态"}]}
+  ],
+  textbook:[],
+  refs:[],
+  bio:"秋季学期团队：李太豪，浙江大学博士生导师，博士毕业于日本德岛大学，哈佛大学神经科学系博士后，深耕情感计算与多模态情感识别领域，发表论文 60 余篇，授权发明专利 34 项，主持参与科技部 2030 等国家级重大项目多项。刘书朋，上海大学副教授，博士毕业于上海交通大学，主要从事人工智能与生物医学交叉研究，发表论文 100 余篇，授权专利 10 余项，培养研究生 30 余名。\n春季学期团队：齐洪钢教授，中国科学院大学计算机科学与技术学院教授，ISO/IEC JTC1/SC29 委员，CCF 多媒体技术专委会执委，长期主讲研究生课程，教学经验丰富。王鹏教授，天津大学计算机科学与技术学院教授，CIPS 委员，长期从事自然语言处理研究，主讲《离散数学》《自然语言处理》等课程十余年。"
+},
+arch:{
+  name:"计算机体系结构",code:"280216085404P2008",en:"Computer Systems Architecture",
+  hours:60,credits:3,attr:"专业核心课",teacher:"韩银和等",
+  pre:"《数字电路》、《程序设计》、《计算机组成原理》、《操作系统》。",
+  goal:"本课程是面向计算机科学与技术学科专业型硕士研究生的专业必修课程。重点讲授计算机体系结构的设计、评价和优化方法与技术。课程的目的及任务是：通过理论教学与实践讨论相结合的方式使学生了解相关基础理论知识，并具备将其应用到实际中的基本能力。学生学习本课程后将了解计算机系统的基本结构和设计方法，理解影响性能的因素并熟悉相关的性能评价方法和工具，跟踪新兴技术和发展趋势，建立全面的从系统设计、评价到优化的整体概念。本课程对于培养学生理解、设计、评价、优化计算机体系结构的综合能力和应用思维具有较为重要的作用。",
+  outline:[
+    {h:"第一章 概要与基础",secs:[{n:"课程概要及教学安排",hrs:1,t:"韩银和"},{n:"指令集与计算机体系结构基础",hrs:1,t:"韩银和"},{n:"单周期处理器回顾",hrs:2,t:"韩银和"}]},
+    {h:"第二章 复杂流水线和乱序执行",secs:[{n:"指令流水线与冲突",hrs:2,t:"韩银和"},{n:"超标量与计分板",hrs:2,t:"韩银和"},{n:"指令乱序、寄存器重命名与例外处理",hrs:2,t:"韩银和"},{n:"分支预测与猜测执行",hrs:2,t:"韩银和"}]},
+    {h:"第三章 高速缓存、内存以及存储器",secs:[{n:"高速缓存结构",hrs:1,t:"陈晓明"},{n:"高速缓存一致性",hrs:2,t:"陈晓明"},{n:"内存及虚拟内存",hrs:2,t:"陈晓明"},{n:"高级内存操作",hrs:2,t:"陈晓明"},{n:"存储器与输入输出系统",hrs:2,t:"陈晓明"},{n:"新兴技术与实践讨论",hrs:3,t:"陈晓明"}]},
+    {h:"第四章 多线程和多核系统",secs:[{n:"多线程",hrs:2,t:"陈晓明"},{n:"芯片多处理器和多核架构",hrs:2,t:"陈晓明"}]},
+    {h:"第五章 向量处理器和 GPU",secs:[{n:"SIMD 和向量机处理器",hrs:2,t:"许浩博"},{n:"GPU 体系结构",hrs:2,t:"许浩博"}]},
+    {h:"第六章 微码和超长指令字 VLIW 处理器",secs:[{n:"微码和超长指令字处理器",hrs:2,t:"许浩博"},{n:"新兴技术与实践讨论",hrs:2,t:"许浩博"}]},
+    {h:"第七章 片上网络",secs:[{n:"片上网络拓扑和流量控制",hrs:2,t:"许浩博"},{n:"片上网络路由器微结构和路由算法",hrs:2,t:"许浩博"}]},
+    {h:"第八章 仓库级计算机",secs:[{n:"云计算概述及软件栈",hrs:1,t:"许浩博"},{n:"资源虚拟化",hrs:1,t:"许浩博"},{n:"分布式系统及软件",hrs:1,t:"许浩博"},{n:"网络协议栈及发展趋势",hrs:2,t:"许浩博"},{n:"新兴技术与实践讨论",hrs:3,t:"许浩博"}]},
+    {h:"第九章 系统评价与性能分析",secs:[{n:"基准测试方法与系统评价",hrs:2,t:"许浩博"},{n:"系统性能评价指标",hrs:1,t:"许浩博"},{n:"性能分析方法与工具",hrs:1,t:"许浩博"}]},
+    {h:"第十章 硬件安全、硬件虚拟化和加速",secs:[{n:"硬件安全与硬件虚拟化",hrs:1,t:"韩银和"},{n:"人工智能硬件与加速",hrs:1,t:"韩银和"},{n:"新兴技术与实践讨论",hrs:2,t:"韩银和"},{n:"课程总结与展望",hrs:1,t:"韩银和"}]},
+    {h:"第十一章 期末考试",secs:[{n:"期末考试",hrs:3,t:"韩银和"}]}
+  ],
+  textbook:["978-7-115-58027-1　计算机体系结构：量化研究方法（中文版·第 6 版）　John L. Hennessy, David A. Patterson　2022 年 10 月　人民邮电出版社"],
+  refs:["Computer organization and design RISC-V edition: The hardware/software interface　David A. Patterson, John L. Hennessy　2017 年 4 月　Morgan Kaufmann",
+        "计算机体系结构基础（第三版）　胡伟武等　2021 年 9 月　机械工业出版社"],
+  bio:"韩银和，中国科学院计算技术研究所研究员、博导，研究方向为计算机体系结构、智能硬件等。\n陈晓明，中国科学院计算技术研究所研究员、博导，研究方向为计算机体系结构、存算一体等。\n许浩博，中国科学院计算技术研究所副研究员、硕导，研究方向为计算机体系结构。"
+},
+hpc:{
+  name:"并行计算与实现技术",code:"280216085410M3016",en:"Parallel Computing and Implementation Technology",
+  hours:40,credits:2,attr:"专业课",teacher:"邵恩等",
+  pre:"程序设计语言、操作系统、计算机网络、计算机算法设计与分析。",
+  goal:"本课程讨论并行计算的基本原理、概念、定理，重点讲授并行算法的分析及其在特定并行硬件架构（多核 CPU、CPU 集群、GPU）下的实现、分析调试和运行，培养学生在并行计算领域的实践能力。通过本课程的学习，要求学生理解并行计算的基本原理，掌握常见并行架构下的并行程序实现技术（OpenMP、MPI 和 CUDA），掌握并行程序的性能分析方法，基于华为鲲鹏 CPU 集群和英伟达 GPU 完成案例设计和实验。",
+  outline:[
+    {h:"第一章 并行计算简介",hrs:4,t:"邵恩",secs:[{n:"课程概述"},{n:"并行计算发展概述"},{n:"并行计算 — 硬件架构基础"},{n:"并行计算 — 软件算法基础"}]},
+    {h:"第二章 共享存储并行编程 OpenMP",hrs:8,t:"肖俊敏",secs:[{n:"OpenMP 核心特性"},{n:"OpenMP 线程同步"},{n:"OpenMP 数据属性"},{n:"OpenMP 链表遍历"},{n:"OpenMP 蒙特卡洛法实现"},{n:"OpenMP 编程实践"}]},
+    {h:"第三章 消息传递接口编程 MPI",hrs:10,t:"杨帆",secs:[{n:"MPI 编程模型基础"},{n:"MPI 非阻塞通讯"},{n:"MPI 数据类型"},{n:"MPI 虚拟拓扑"},{n:"MPI-RMA"},{n:"MPI 并行 I/O"},{n:"MPI 超算中心案例"},{n:"并行程序性能分析工具 TAU"},{n:"并行计算可视化工具 ParaView"},{n:"MPI 编程实践"}]},
+    {h:"第四章 大规模并行处理器编程 CUDA",hrs:18,t:"邵恩",secs:[{n:"并行加速器与 GPU 基础"},{n:"CUDA 编程模型"},{n:"CUDA 统一内存模型"},{n:"CUDA 可扩展并行计算"},{n:"CUDA 内存架构与数据"},{n:"CUDA 性能优化"},{n:"CUDA 并行模式 — 卷积"},{n:"CUDA 并行模式 — 稀疏矩阵"},{n:"CUDA 应用 — 机器学习"},{n:"CUDA 张量核心与混合精度计算"},{n:"CUDA 综合实践 1"},{n:"CUDA 综合实践 2"}]}
+  ],
+  textbook:["978-7-03-044550-6　并行计算与实现技术　迟学斌　2015 年 6 月　科学出版社"],
+  refs:["978-7-302-56268-9　鲲鹏处理器架构与编程　戴志涛　2020 年 9 月　清华大学出版社"],
+  bio:"邵恩，中国科学院计算技术研究所高级工程师、硕士生导师，博士毕业于中国科学院大学。在高性能计算机研制方面，主要负责机群操作系统的开发与研制工作，具体攻关技术方向包括计算机系统结构、超算系统软件。承担和参与国家重点研发计划、国家自然科学基金、总装预研、CCF-百度松果基金等项目及课题的科研任务。\n肖俊敏，男，博士，中国科学院计算技术研究所副研究员，主要从事高性能并行算法设计与优化和智能超算的研究工作。主持并参与了国家自然科学基金青年科学基金项目，参与国家重点研发计划「高性能计算」重点专项、「海洋环境安全保障」重点专项，以及中国科学院重点部署项目。\n杨帆，男，博士，中国科学院计算技术研究所高级工程师，主要从事计算机体系结构、高性能互连网络芯片、在网计算技术的研究工作。作为项目骨干参与十三五重点研发计划 1 项、中国科学院先导 B 类专项课题 1 项、先导 C 类专项课题 1 项、科技创新重大项目 1 项，参与多款高性能互连网络核心芯片研制，发表论文和专利 10 余篇。"
+},
+db:{
+  name:"高级数据库系统",code:"280216085410M3020",en:"Advanced Database System",
+  hours:40,credits:2,attr:"专业课",teacher:"沈志宏等",
+  pre:"无",
+  goal:"本课程的任务是使学生了解现代数据库的产生、主要类型、关键技术及该技术的应用实践。要求学生在教师的指导下进行相关文献资料的阅读，在华为 GaussDB 数据库上进行相关实践。",
+  outline:[
+    {h:"第一章 数据管理技术概述",hrs:4,t:"沈志宏",secs:[{n:"数据库技术发展历史"},{n:"数据模型概述"},{n:"NoSQL 和 CAP 理论"},{n:"MR 模型和应用"}]},
+    {h:"第二章 关系数据模型",hrs:2,t:"沈志宏",secs:[{n:"E-R 模型和数据库设计"},{n:"SQL 语言"}]},
+    {h:"第三章 关系数据理论",hrs:4,t:"王华进",secs:[{n:"关系代数和逻辑基础"},{n:"范式和无损分解"},{n:"存储、索引和查询优化"}]},
+    {h:"第四章 华为 openGauss 理论与实践",hrs:6,t:"王华进",secs:[{n:"华为数据库介绍"},{n:"openGauss（for MySQL）的架构"},{n:"openGauss（for MySQL）实例连接方式"},{n:"场景化综合应用实践"}]},
+    {h:"第五章 XML 数据库技术",hrs:4,t:"王华进",secs:[{n:"XML 数据模型"},{n:"XML 数据库存储"},{n:"XML 数据库索引"},{n:"XML 数据库查询和应用"}]},
+    {h:"第六章 键值数据库技术",hrs:4,t:"王华进",secs:[{n:"分布式数据库理论"},{n:"key-value 数据模型"},{n:"Memcached 缓存技术"},{n:"Redis 及其应用"}]},
+    {h:"第七章 列存数据库技术",hrs:5,t:"王华进",secs:[{n:"column 数据模型"},{n:"Cassandra 数据库设计和基本操作"},{n:"Cassandra 集群、高可用"},{n:"华为 GaussDB for Cassandra 实践"}]},
+    {h:"第八章 文档数据库技术",hrs:5,t:"王华进",secs:[{n:"Document 数据模型"},{n:"MongoDB 存储、索引和基本操作"},{n:"MongoDB 集群、高可用"},{n:"华为 GaussDB for MongoDB 实践"}]},
+    {h:"第九章 图数据库技术",hrs:3,t:"沈志宏",secs:[{n:"Graph 数据模型和查询语言"},{n:"Neo4j 数据库设计和基本操作"},{n:"大规模图数据查询"}]},
+    {h:"第十章 考试",hrs:3,t:"沈志宏",secs:[{n:"闭卷考试"}]}
+  ],
+  textbook:[],
+  refs:["9787111302872　数据库系统实现（第 2 版）　杨冬青等译　2010 年 1 月　机械工业出版社",
+        "9787111433033　NoSQL 精粹　爱飞翔译　2013 年 9 月　机械工业出版社"],
+  bio:"沈志宏，正高级工程师，博士生导师，现任中国科学院计算机网络信息中心大数据部主任、中国科学院科学数据总中心常务副主任、大数据分析与计算技术国家地方联合工程实验室总工程师，《数据分析与知识服务》期刊编委、CCF 大数据专委会执委、CCF 开源委员会执委、中国通信学会开源技术委员会委员。研究方向为大数据管理与处理、图数据库管理系统、分布式计算、语义网技术。目前主持国家重点研发计划项目「面向国家科学数据中心的基础软件栈及系统」、中国科学院网信专项项目「科学大数据工程（三期）」。主持开发分布式数据管理发布系统 VisualDB、科学数据搜索引擎 Voovle、大数据流水线 PiFlow、融合数据库系统 PandaDB 等开源软件系统。发明专利授权 22 项，在国内外重要刊物及会议发表学术论文 30 余篇，学术编著 1 部、译著 1 部、软件开发类编著 3 部。主导的开源项目在 GitHub/Gitee 平台获 stars 数 2500+、forks 数 1000+，部分软件在 Apache Calcite、Neo4j、OpenKG 等社区得到推荐和引用。\n王华进，男，1987 年生，博士，副研究员，中国科学院计算机网络信息中心，主要研究方向为大数据管理、处理技术。研究成果发表在 DASFAA、CCGRID、DEXA、软件学报等国内外重要会议及刊物上，参与多项科学数据相关开源软件研发。"
+},
+marx:{
+  name:"新时代中国特色社会主义理论与实践",code:"280216030500MB001-02",en:"Theory and Practice of Socialism with Chinese Characteristics in the New Era",
+  hours:36,credits:2,attr:"公共必修课",teacher:"董天美",
+  pre:"无",
+  goal:"本课程是全校硕士研究生的思想政治理论必修课，要在当代世界和当代中国的背景下，分专题探讨中国特色社会主义实践中的重大理论和现实问题，使学生进一步掌握中国特色社会主义理论体系，坚定中国特色社会主义信念。",
+  outline:[
+    {h:"第一章 导论",hrs:1,t:"董天美",secs:[{n:"中国特色社会主义的开创与发展"},{n:"习近平新时代中国特色社会主义思想"},{n:"学习本课程的目的、意义与方法"}]},
+    {h:"第二章 中国特色社会主义进入新时代",hrs:2,t:"董天美",secs:[{n:"新时代的主要内涵和重大意义"},{n:"我国社会主要矛盾的转化"},{n:"我国仍处于并将长期处于社会主义初级阶段"}]},
+    {h:"第三章 新时代中国共产党的历史使命",hrs:1,t:"董天美",secs:[{n:"中国共产党的初心和使命"},{n:"努力完成新时代的历史使命"},{n:"新时代的战略安排"}]},
+    {h:"第四章 中国特色社会主义经济建设",hrs:4,t:"董天美",secs:[{n:"中国特色社会主义经济理论与制度"},{n:"建设现代化经济体系"},{n:"深化供给侧结构性改革"},{n:"完善社会主义市场经济体制"},{n:"推动形成全面开放新格局"}]},
+    {h:"第五章 中国特色社会主义政治建设",hrs:4,t:"董天美",secs:[{n:"中国特色社会主义政治理论与制度"},{n:"坚定不移走中国特色社会主义政治发展道路"},{n:"健全人民当家做主的制度体系"},{n:"全面依法治国"}]},
+    {h:"第六章 中国特色社会主义文化建设",hrs:4,t:"董天美",secs:[{n:"中国特色社会主义文化理论与制度"},{n:"巩固和发展社会主义意识形态"},{n:"培育和践行社会主义核心价值观"},{n:"推动社会主义文化繁荣兴盛"}]},
+    {h:"第七章 中国特色社会主义社会建设",hrs:4,t:"董天美",secs:[{n:"中国特色社会主义社会建设理论与制度"},{n:"在发展中保障和改善民生"},{n:"加强和创新社会治理"},{n:"坚持总体国家安全观"}]},
+    {h:"第八章 中国特色社会主义生态文明建设",hrs:4,t:"董天美",secs:[{n:"中国特色社会主义生态文明建设理论与制度"},{n:"坚持人与自然和谐共生"},{n:"建设美丽中国"}]},
+    {h:"第九章 坚持和平发展道路与构建人类命运共同体",hrs:4,t:"董天美",secs:[{n:"当代中国同世界关系的历史性变化"},{n:"坚持和平发展道路"},{n:"推动构建新型国际关系"},{n:"推动构建人类命运共同体"}]},
+    {h:"第十章 坚持党对一切工作的领导与全面从严治党",hrs:4,t:"董天美",secs:[{n:"坚持党对一切工作的领导的依据和制度安排"},{n:"新时代党的建设的总要求"},{n:"推动全面从严治党向纵深发展"}]}
+  ],
+  textbook:["978-7-04-062291-1　《新时代中国特色社会主义理论与实践》（2024 年版）　本书编写组　2024 年 6 月　高等教育出版社"],
+  refs:[],
+  bio:"董天美，女，中国科学院大学马克思主义学院讲师。"
+},
+dialectic:{
+  name:"自然辩证法概论",code:"280216010108MB001-02",en:"Introduction to Dialectics of Nature",
+  hours:36,credits:1,attr:"公共必修课",teacher:"赵俊海",
+  pre:"无",
+  goal:"本课程是硕士研究生思想政治理论课必修课。本课程帮助学生自觉运用马克思主义的理论与方法深刻理解新时代中国马克思主义科学技术观与创新性国家建设的重大意义，树立正确的自然观和科技观，了解科技发展的一般规律，理解科学技术的社会功能，正确评价科技对社会的影响，增强科研伦理与道德，培养学生的创新精神和创新能力。",
+  outline:[
+    {h:"第一章 绪论",hrs:4,t:"赵俊海",secs:[{n:"自然辩证法的学科性质"},{n:"自然辩证法的研究内容"},{n:"自然辩证法的历史发展"},{n:"自然辩证法的新时代意义"}]},
+    {h:"第二章 马克思主义自然观",hrs:4,t:"赵俊海",secs:[{n:"马克思主义自然观的形成"},{n:"马克思主义自然观的发展"}]},
+    {h:"第三章 马克思主义科学技术观",hrs:4,t:"赵俊海",secs:[{n:"马克思、恩格斯的科学技术思想"},{n:"科学技术的本质与结构"},{n:"科学技术的发展模式及动力"}]},
+    {h:"第四章 马克思主义科学技术方法论",hrs:4,t:"赵俊海",secs:[{n:"科学技术研究的辨证思维方法"},{n:"科学技术研究的创新与批判思维方法"},{n:"科学技术研究的数学与系统思维方法"},{n:"科学技术活动的方法"}]},
+    {h:"第五章 马克思主义科学技术社会论",hrs:4,t:"赵俊海",secs:[{n:"科学技术的社会功能"},{n:"科学技术的社会运行"},{n:"科学技术的社会治理"}]},
+    {h:"第六章 中国马克思主义科学技术观",hrs:4,t:"赵俊海",secs:[{n:"毛泽东思想中的科学技术观"},{n:"邓小平理论、「三个代表」重要思想、科学发展观中的科学技术观"},{n:"习近平新时代中国特色社会主义思想中的科学技术观"}]},
+    {h:"第七章 马克思主义与现实问题：科技伦理",hrs:4,t:"赵俊海",secs:[{n:"科研伦理"},{n:"技术伦理"}]},
+    {h:"第八章 小组汇报",hrs:4,t:"赵俊海",secs:[{n:"小组汇报"}]},
+    {h:"第九章 小组汇报",hrs:4,t:"赵俊海",secs:[{n:"小组汇报"}]}
+  ],
+  textbook:["978-7-04-050158-2　自然辩证法概论（2018 年版）　本书编写组　2018 年 8 月　高等教育出版社"],
+  refs:[],
+  bio:"赵俊海，男，中国科学院大学马克思主义学院讲师，兼任国家教材编审专家库成员。研究领域为马克思主义与科技、马克思主义与生态、科学技术与社会。出版著作有《第三章：科学哲学的当代发展》《尾声：1840 年中西科技的悬殊对比》《第十章：建构主义的科学哲学建构方式》《高等学校哲学社会科学研究评价指南》《哲人疯语——当代哲学思想中的奇谈怪论》。发表论文有《科学哲学的经验主义新建构》《「巨机器」时代人的异化及其救赎——简论刘易斯·芒福德人文主义机器哲学思想》《第八届哲学分析论坛——「从辩护到审度：科技时代如何看待科学」研讨会综述》《人与技术间的无限博弈——凯文·凯利的技术哲学述评》《人 VS 技术：谁是最终的赢家》。"
+},
+startup:{
+  name:"创业融资入门",code:"280216120100MX006",en:"The First Step of Start-up Financing",
+  hours:30,credits:1,attr:"公共选修课",teacher:"贾维剑",
+  pre:"无",
+  goal:"本课程通过对于创业与融资的概念与流程的讲解，结合实际案例，一步步帮助同学从技术专家向更综合性的创业人才发展。本课程重点在于让同学根据自己正在从事的科研领域，学习专利及技术如何发挥商业价值，如何通过商业计划书和路演向投资人传递关键信息。全班分成 6 个模拟创业小组，每组确定创业主题并完成商业计划书的撰写，体验从一个创业想法到一个创业项目融资路演的全过程，为将来的真实创业融资打下基础。考核形式为每组派代表进行模拟路演。",
+  outline:[
+    {h:"第一章 创业为什么需要股权投资的支持？",hrs:3,t:"贾维剑",secs:[{n:"股权投资能给创业者带来什么？"},{n:"什么是股权投资"},{n:"为什么要成为上市公司"},{n:"创业时间点的选择"}]},
+    {h:"第二章 创业起步",hrs:3,t:"贾维剑",secs:[{n:"公司如何赚钱（三大报表）"},{n:"如何建立商业模式"},{n:"股权如何分配"}]},
+    {h:"第三章 商业计划书的制作要点",hrs:3,t:"贾维剑",secs:[{n:"商业计划书结构"},{n:"如何突出核心竞争力"},{n:"头脑风暴激发创业灵感"}]},
+    {h:"第四章 创业路演和如何对接投资人",hrs:3,t:"贾维剑",secs:[{n:"路演结构"},{n:"投资人对接"},{n:"创业公司的估值"},{n:"创业提案（1）"}]},
+    {h:"第五章 科技类创业案例分析",hrs:3,t:"贾维剑",secs:[{n:"公司架构"},{n:"科技类创业项目案例分析"},{n:"创业提案（2）"}]},
+    {h:"第六章 医疗类创业案例分析",hrs:3,t:"贾维剑",secs:[{n:"医疗类创业项目案例分析"},{n:"确定创业小组名称与愿景"},{n:"商业计划书 Word 版初稿制作"}]},
+    {h:"第七章 商业模式类创业案例分析",hrs:3,t:"贾维剑",secs:[{n:"重要的股权投资条款"},{n:"商业模式类创业案例分析"},{n:"商业计划书 Word 版打磨"}]},
+    {h:"第八章 投资人特征分析",hrs:3,t:"贾维剑",secs:[{n:"典型投资人举例（国际、国内、省内）"},{n:"商业计划书 PPT 版分组制作"},{n:"商业计划书 PPT 版点评与反馈"}]},
+    {h:"第九章 复习与模拟路演",hrs:3,t:"贾维剑",secs:[{n:"往期课程内容复习"},{n:"分组模拟路演"},{n:"路演点评与反馈"}]},
+    {h:"第十章 路演考核",hrs:3,t:"贾维剑",secs:[{n:"路演考核（上）"},{n:"路演考核（下）"},{n:"互动提问与加餐"}]}
+  ],
+  textbook:[],
+  refs:[],
+  bio:"贾维剑，浙江秘银投资管理有限公司副总裁，浙江大学金融系硕士毕业，拥有 6 年证券从业经验与 8 年股权投资经验，曾在浙江大学创业投资有限公司任总裁助理。关注医药、科技等领域的投资机会。多次担任湖州南太湖精英计划、中国创新创业大赛、IBM SmartCamp 等比赛的评委。"
+},
+tennis:{
+  name:"网球-02班",code:"280216040300PX003-02",en:"tennis",
+  hours:30,credits:.5,attr:"公共选修课",teacher:"云吒",
+  pre:"无",
+  goal:"通过网球选修课的教学，学习网球运动的基本技术，基本掌握正手平击球、反手平击球、截击球、反手削球等网球技术，提高学生对网球运动的认识，体会网球运动快乐，提高自我锻炼身体的能力。",
+  outline:[
+    {h:"第一章 基本理论部分",hrs:1,t:"云吒",secs:[{n:"网球运动概况"},{n:"网球赛事赏析"}]},
+    {h:"第二章 网球步伐",hrs:3,t:"云吒",secs:[{n:"开放式步法"},{n:"关闭式步法"},{n:"滑步"},{n:"左右交叉步"},{n:"跨步"}]},
+    {h:"第三章 正手击球",hrs:6,t:"云吒",secs:[{n:"平击球"}]},
+    {h:"第四章 反手击球",hrs:6,t:"云吒",secs:[{n:"双手反手平拍击球"}]},
+    {h:"第五章 发球",hrs:2,t:"云吒",secs:[{n:"下手发球技术"},{n:"上手发球技术"}]},
+    {h:"第六章 截击",hrs:5,t:"云吒",secs:[{n:"正手截击球"},{n:"反手截击球"}]},
+    {h:"第七章 削球",hrs:5,t:"云吒",secs:[{n:"单手反手削球"}]},
+    {h:"第八章 期末考核",hrs:2,t:"云吒",secs:[{n:"期末考核"}]}
+  ],
+  textbook:["9787308141062　网球运动　虞力宏　2015 年 6 月　浙江大学出版社"],
+  refs:["9787500943945　网球运动教程　刘青　2012 年 12 月　北京体育大学出版社"],
+  bio:"云吒，游泳高级教练员、二级运动员。"
+}
+};
 
 const wn=["周日","周一","周二","周三","周四","周五","周六"];
 let viewStart=monday(new Date()),sel=strip(new Date());
@@ -252,6 +548,26 @@ function monday(d){let x=strip(d),wd=x.getDay();x.setDate(x.getDate()+(wd===0?-6
 function aw(d){let x=strip(d),diff=Math.floor((x-TERM_START)/DAY);if(diff<0||x>TERM_END)return null;return Math.floor(diff/7)+1}
 function list(d){let w=aw(d);return w?cs.filter(c=>c.day===d.getDay()&&c.weeks.includes(w)).sort((a,b)=>a.start-b.start):[]}
 function ctime(c){return pt[c.start][0]+"–"+pt[c.end][1]}
+const DAYORDER=[1,2,3,4,5,6,0];
+function colOf(day){return day===0?8:day+1}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function fmtWeeks(ws){
+  const a=[...new Set(ws)].sort((x,y)=>x-y),out=[];let i=0;
+  while(i<a.length){let j=i;while(j+1<a.length&&a[j+1]===a[j]+1)j++;
+    out.push(i===j?String(a[i]):(j-i===1?a[i]+"、"+a[j]:a[i]+"–"+a[j]));i=j+1}
+  return out.join("、");
+}
+function entriesOf(id){return cs.filter(c=>c.id===id).sort((a,b)=>a.day-b.day||a.start-b.start)}
+function timeRange(w){return w.length>1?fmtWeeks(w)+" 周":"第 "+w[0]+" 周"}
+function nextOccurrence(id){
+  const ents=entriesOf(id);
+  for(let i=0;i<35;i++){
+    const d=strip(new Date());d.setDate(d.getDate()+i);
+    const w=aw(d);if(!w)continue;
+    if(ents.some(c=>c.day===d.getDay()&&c.weeks.includes(w)))return d;
+  }
+  return null;
+}
 function mins(s){let[a,b]=s.split(":").map(Number);return a*60+b}
 function pad(n){return String(n).padStart(2,"0")}
 function fmtMD(d){return `${d.getMonth()+1}/${d.getDate()}`}
@@ -270,20 +586,26 @@ function courseStartDate(date,c){
 function renderToday(n){
   let l=list(n),el=document.getElementById("todayCourses");
   document.getElementById("todayCount").textContent=l.length+" 门课";
-  el.innerHTML=l.length?l.map(c=>`<article class="course">
+  el.innerHTML=l.length?l.map((c,i)=>`<article class="course" data-i="${i}">
     <div class="time">${ctime(c)}<span>${c.start}–${c.end} 节</span></div>
-    <div><h3>${c.name}</h3><div class="meta">第 ${aw(n)} 周 · ${c.credits} 学分</div><span class="type ${c.cls}">${c.type}</span></div>
+    <div><h3>${c.name}</h3><div class="meta">第 ${aw(n)} 周 · ${c.credits} 学分</div><div class="meta">地点：${c.loc}</div><span class="type ${c.cls}">${c.type}</span></div>
   </article>`).join(""):`<div class="empty">今天没有课 🎉</div>`;
+  el.querySelectorAll(".course").forEach(node=>{
+    const c=l[Number(node.dataset.i)];
+    node.addEventListener("click",()=>openSheet(c,n));
+  });
 }
 
+let nowCourse=null;
 function renderNow(n){
   let w=aw(n),t=document.getElementById("nowTitle"),m=document.getElementById("nowMeta"),cd=document.getElementById("countdownText");
-  cd.style.display="none";
+  cd.style.display="none";nowCourse=null;
   if(!w){t.textContent=n<TERM_START?"秋季学期还没开始":"秋季学期已结束";m.textContent="当前不在秋季教学周内";return}
   let l=list(n),nm=n.getHours()*60+n.getMinutes(),cur=l.find(c=>nm>=mins(pt[c.start][0])&&nm<=mins(pt[c.end][1]));
   if(cur){
     t.textContent="正在上："+cur.name;
-    m.textContent=ctime(cur)+" · "+cur.start+"–"+cur.end+"节 · "+cur.type;
+    m.textContent=ctime(cur)+" · "+cur.start+"–"+cur.end+"节 · "+cur.loc;
+    nowCourse={course:cur,date:n};
     const [eh,em]=pt[cur.end][1].split(":").map(Number);
     const end=new Date(n.getFullYear(),n.getMonth(),n.getDate(),eh,em,0);
     cd.textContent="距离下课还有 "+diffText(end-n);cd.style.display="inline-flex";return;
@@ -291,14 +613,16 @@ function renderNow(n){
   let next=l.find(c=>mins(pt[c.start][0])>nm);
   if(next){
     t.textContent="下一门："+next.name;
-    m.textContent="今天 "+ctime(next)+" 开始 · "+next.start+"–"+next.end+"节";
+    m.textContent="今天 "+ctime(next)+" 开始 · "+next.start+"–"+next.end+"节 · "+next.loc;
+    nowCourse={course:next,date:n};
     cd.textContent="距离上课还有 "+diffText(courseStartDate(n,next)-n);cd.style.display="inline-flex";return;
   }
   for(let i=1;i<=14;i++){
     let d=strip(n);d.setDate(d.getDate()+i);let a=list(d);
     if(a.length){
       t.textContent="下一门："+a[0].name;
-      m.textContent=`${d.getMonth()+1}月${d.getDate()}日 ${wn[d.getDay()]} ${ctime(a[0])}`;
+      m.textContent=`${d.getMonth()+1}月${d.getDate()}日 ${wn[d.getDay()]} ${ctime(a[0])} · ${a[0].loc}`;
+      nowCourse={course:a[0],date:d};
       cd.textContent="还有 "+diffText(courseStartDate(d,a[0])-n);cd.style.display="inline-flex";return;
     }
   }
@@ -330,37 +654,32 @@ function shortType(type){
 
 function renderWeekTable(){
   const table=document.getElementById("weekTable");
-  const weekendBox=document.getElementById("weekendBox");
-  const weekendList=document.getElementById("weekendList");
+  const wrap=document.getElementById("weekTableWrap");
   const w=aw(viewStart);
+  const wide=(tableMode==="wide");
   document.getElementById("weekOverviewLabel").textContent=w?`第 ${w} 周实际课程`:"非教学周";
   table.innerHTML="";
-  weekendList.innerHTML="";
-  weekendBox.style.display="none";
+  table.classList.toggle("wide",wide);
+  wrap.scrollLeft=0;
 
   const corner=document.createElement("div");
-  corner.className="wt-head";
+  corner.className="wt-head corner";
   corner.style.gridColumn="1";
   corner.style.gridRow="1";
   corner.textContent="节次";
   table.appendChild(corner);
 
-  const headers=[
-    {day:1,name:"周一"},
-    {day:2,name:"周二"},
-    {day:3,name:"周三"},
-    {day:4,name:"周四"},
-    {day:5,name:"周五"},
-  ];
-
-  headers.forEach((item,i)=>{
+  const today=strip(new Date());
+  DAYORDER.forEach((wd,idx)=>{
     const d=new Date(viewStart);
-    d.setDate(d.getDate()+i);
+    d.setDate(d.getDate()+idx);
     const h=document.createElement("div");
     h.className="wt-head";
-    h.style.gridColumn=String(i+2);
+    if(+d===+today)h.classList.add("is-today");
+    h.dataset.col=String(colOf(wd));
+    h.style.gridColumn=String(colOf(wd));
     h.style.gridRow="1";
-    h.innerHTML=`${item.name}<small>${d.getMonth()+1}/${d.getDate()}</small>`;
+    h.innerHTML=`${wn[wd].replace("周","")}<small>${d.getMonth()+1}/${d.getDate()}</small>`;
     table.appendChild(h);
   });
 
@@ -369,13 +688,13 @@ function renderWeekTable(){
     p.className="wt-period";
     p.style.gridColumn="1";
     p.style.gridRow=String(r+1);
-    p.innerHTML=`<b>${r}</b><span>${pt[r][0]}</span>`;
+    p.innerHTML=wide?`<b>${r}</b><span>${pt[r][0]}</span>`:`<b>${r}</b>`;
     table.appendChild(p);
 
-    for(let c=0;c<5;c++){
+    for(let c=2;c<=8;c++){
       const cell=document.createElement("div");
       cell.className="wt-cell";
-      cell.style.gridColumn=String(c+2);
+      cell.style.gridColumn=String(c);
       cell.style.gridRow=String(r+1);
       table.appendChild(cell);
     }
@@ -383,32 +702,38 @@ function renderWeekTable(){
 
   if(!w) return;
 
-  const active = cs.filter(c=>c.weeks.includes(w));
+  cs.filter(c=>c.weeks.includes(w)).forEach(c=>{
+    const idx=DAYORDER.indexOf(c.day);
+    const d=new Date(viewStart);
+    d.setDate(d.getDate()+idx);
 
-  active.filter(c=>c.day>=1 && c.day<=5).forEach(c=>{
     const block=document.createElement("div");
     block.className=`wt-course ${c.cls}`;
-    block.style.gridColumn=String(c.day+1);
+    block.style.gridColumn=String(colOf(c.day));
     block.style.gridRow=`${c.start+1} / ${c.end+2}`;
-    block.innerHTML=`
-      <div class="wt-kind">${shortType(c.type)}</div>
-      <strong>${c.name}</strong>
-      <small>${ctime(c)}</small>
-    `;
+    block.title=`${c.name} · ${wn[c.day]} ${ctime(c)} · ${c.loc}`;
+    block.innerHTML=wide
+      ? `<span class="wt-kind">${shortType(c.type)}</span>
+         <strong class="wt-name">${c.name}</strong>
+         <small class="wt-meta">${ctime(c)}</small>
+         <small class="wt-loc">${c.locShort}</small>`
+      : `<strong class="wt-name">${c.name}</strong>
+         <small class="wt-locshort">${c.locShort}</small>`;
+    block.addEventListener("click",()=>openSheet(c,d));
     table.appendChild(block);
   });
 
-  const weekend = active.filter(c=>c.day===6 || c.day===0).sort((a,b)=>a.day-b.day || a.start-b.start);
-  if(weekend.length){
-    weekendBox.style.display="block";
-    weekendList.innerHTML = weekend.map(c=>`
-      <div class="weekend-item">
-        <b>${c.day===6?"周六":"周日"} · ${c.name}</b>
-        <span>${ctime(c)} · ${c.start}–${c.end}节</span>
-        <span>${c.type}</span>
-      </div>
-    `).join("");
-  }
+  if(wide) focusTodayColumn();
+}
+
+function focusTodayColumn(){
+  const wrap=document.getElementById("weekTableWrap");
+  const today=strip(new Date());
+  if(+monday(today)!==+viewStart) return;
+  const head=wrap.querySelector('.wt-head[data-col="'+colOf(today.getDay())+'"]');
+  if(!head) return;
+  const target=head.offsetLeft-wrap.clientWidth/2+head.offsetWidth/2;
+  wrap.scrollLeft=Math.max(0,target);
 }
 
 function renderStrip(){
@@ -427,14 +752,162 @@ function renderStrip(){
   }
   let el=document.getElementById("selectedDayCourses"),l=list(sel),w=aw(sel),
       head=`${sel.getMonth()+1}月${sel.getDate()}日 · ${wn[sel.getDay()]}${w?` · 第${w}周`:""}`;
-  el.innerHTML=`<div class="selected-date">${head}</div>`+(l.length?l.map(c=>`
-    <div class="mini-course"><div class="dot"></div><div><b>${c.name}</b><span>${ctime(c)} · ${c.start}–${c.end}节 · ${c.type}</span></div></div>
+  el.innerHTML=`<div class="selected-date">${head}</div>`+(l.length?l.map((c,i)=>`
+    <div class="mini-course" data-i="${i}"><div class="dot"></div><div><b>${c.name}</b><span>${ctime(c)} · ${c.start}–${c.end}节 · ${c.type}</span><span>地点：${c.loc}</span></div></div>
   `).join(""):`<div class="mini-course"><div class="dot" style="background:#c8ced9"></div><div><b>没有课</b><span>这一天没有已录入课程</span></div></div>`);
+  el.querySelectorAll(".mini-course[data-i]").forEach(node=>{
+    const c=l[Number(node.dataset.i)];
+    node.addEventListener("click",()=>openSheet(c,sel));
+  });
 }
 
 document.getElementById("prevWeek").addEventListener("click",()=>{viewStart.setDate(viewStart.getDate()-7);sel=new Date(viewStart);renderStrip()});
 document.getElementById("nextWeek").addEventListener("click",()=>{viewStart.setDate(viewStart.getDate()+7);sel=new Date(viewStart);renderStrip()});
 document.getElementById("backToday").addEventListener("click",()=>{let n=new Date();viewStart=monday(n);sel=strip(n);renderStrip()});
+
+/* ============ 整周课表：紧凑 / 横屏 ============ */
+let tableMode="compact";
+try{const s=localStorage.getItem("wtMode");if(s==="wide"||s==="compact")tableMode=s}catch(e){}
+
+function syncTableModeUI(){
+  const btn=document.getElementById("tableModeBtn");
+  btn.textContent=(tableMode==="wide")?"紧凑":"横屏";
+  btn.classList.toggle("on",tableMode==="wide");
+  document.getElementById("tableHint").textContent=(tableMode==="wide")
+    ?"横屏查看：表格可以左右滑动，格子里显示节次时间和上课地点；再点一次切回紧凑模式。"
+    :"周一到周日都在这一张表里。点任意一门课，可以查看它的课程详情；想看节次时间和上课地点，点右上角「横屏」。";
+}
+
+document.getElementById("tableModeBtn").addEventListener("click",()=>{
+  tableMode=(tableMode==="wide")?"compact":"wide";
+  try{localStorage.setItem("wtMode",tableMode)}catch(e){}
+  try{
+    if(tableMode==="wide"){
+      if(screen.orientation&&screen.orientation.lock)screen.orientation.lock("landscape").catch(()=>{});
+    }else{
+      if(screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();
+    }
+  }catch(e){}
+  syncTableModeUI();
+  renderWeekTable();
+});
+
+/* ============ 全部课程清单 ============ */
+const DOT_COLOR={degree:"#4169e1",pubdegree:"#26785a",elect:"#7050b8"};
+function renderCourseIndex(){
+  const box=document.getElementById("courseIndex");
+  document.getElementById("allCourseBadge").textContent=ORDER.length+" 门";
+  box.innerHTML=ORDER.map(id=>{
+    const det=DETAILS[id],ents=entriesOf(id),e=ents[0];
+    return `<div class="ci-item" data-id="${id}">
+      <span class="ci-dot" style="background:${DOT_COLOR[e.cls]||"#4169e1"}"></span>
+      <div class="ci-txt">
+        <b>${esc(det.name)}</b>
+        <span>${esc(det.attr)} · ${det.credits} 学分 · 主讲 ${esc(det.teacher)}</span>
+        <span>${ents.map(x=>wn[x.day]+" 第 "+x.start+"–"+x.end+" 节").join(" / ")} · ${esc(e.loc)}</span>
+      </div>
+      <span class="ci-arrow">›</span>
+    </div>`;
+  }).join("");
+  box.querySelectorAll(".ci-item").forEach(node=>{
+    node.addEventListener("click",()=>openSheet(entriesOf(node.dataset.id)[0],null));
+  });
+}
+
+/* ============ 课程详情抽屉 ============ */
+const sheet=document.getElementById("sheet");
+const sheetMask=document.getElementById("sheetMask");
+const sheetBody=document.getElementById("sheetBody");
+
+function listBlock(items,emptyText){
+  if(!items||!items.length)return `<span style="color:var(--muted)">${emptyText}</span>`;
+  return items.map(t=>`<div style="margin-bottom:5px">${esc(t)}</div>`).join("");
+}
+
+function outlineBlock(chs){
+  if(!chs||!chs.length)return `<span style="color:var(--muted)">官网未提供大纲内容</span>`;
+  return chs.map((ch,i)=>{
+    const meta=[ch.hrs?ch.hrs+" 学时":"",ch.t||""].filter(Boolean).join(" · ");
+    const secs=(ch.secs||[]).map(s=>{
+      const sm=[s.hrs?s.hrs+" 学时":"",s.t||""].filter(Boolean).join(" · ");
+      return `<div class="sec"><span>${esc(s.n)}</span>${sm?`<em>${esc(sm)}</em>`:""}</div>`;
+    }).join("");
+    return `<details${i===0?" open":""}><summary><span>${esc(ch.h)}</span>${meta?`<em>${esc(meta)}</em>`:""}</summary>${secs?`<div class="secs">${secs}</div>`:""}</details>`;
+  }).join("");
+}
+
+function openSheet(c,date){
+  const det=DETAILS[c.id]||{name:c.name};
+  const d=(date==null)?nextOccurrence(c.id):date;
+  const w=d?aw(d):null;
+
+  document.getElementById("sheetTitle").textContent=det.name||c.name;
+  document.getElementById("sheetSub").textContent=[
+    det.attr||c.type,
+    (det.credits!=null?det.credits:c.credits)+" 学分",
+    det.hours?det.hours+" 课时":"",
+    det.teacher?("主讲 "+det.teacher):""
+  ].filter(Boolean).join(" · ");
+
+  let html="";
+  if(d&&w){
+    html+=`<div class="now-card">
+      <div class="nc-k">${date==null?"下次上课":"本次上课"}</div>
+      <div class="nc-t">${d.getMonth()+1}月${d.getDate()}日 ${wn[d.getDay()]} · 第 ${w} 周</div>
+      <div class="nc-m">第 ${c.start}–${c.end} 节 · ${ctime(c)}</div>
+      <div class="nc-l">${esc(c.loc)}</div>
+    </div>`;
+  }
+
+  const ents=entriesOf(c.id);
+  html+=`<div class="row"><div class="k">全部上课时间</div><div class="v">${ents.map(e=>`
+    <div class="ent"><b>${wn[e.day]}　第 ${e.start}–${e.end} 节</b><span>${ctime(e)}　${esc(e.loc)}</span><span>${timeRange(e.weeks)}</span></div>`).join("")}</div></div>`;
+
+  html+=`<div class="row"><div class="k">课程编码</div><div class="v">${esc(det.code||"—")}<br><em>${esc(det.en||"")}</em></div></div>`;
+  html+=`<div class="row"><div class="k">课程信息</div><div class="v">${[det.hours?det.hours+" 课时":"",det.credits!=null?det.credits+" 学分":"",det.attr||""].filter(Boolean).join(" · ")}<br><em>预修课程：${esc(det.pre||"无")}</em></div></div>`;
+  html+=`<div class="row"><div class="k">教学目的与要求</div><div class="v">${esc(det.goal||"官网未提供")}</div></div>`;
+  html+=`<div class="row"><div class="k">大纲内容</div><div class="v">${outlineBlock(det.outline)}</div></div>`;
+  html+=`<div class="row"><div class="k">教材信息</div><div class="v">${listBlock(det.textbook,"官网未提供教材信息")}</div></div>`;
+  html+=`<div class="row"><div class="k">参考书</div><div class="v">${listBlock(det.refs,"官网未提供参考书")}</div></div>`;
+  html+=`<div class="row"><div class="k">教师简介</div><div class="v">${esc(det.bio||"官网未提供").split("\n").join("<br>")}</div></div>`;
+  html+=`<p class="sheet-foot">以上内容来自课程官网教学大纲，仅供参考，以任课教师实际通知为准。</p>`;
+
+  sheetBody.innerHTML=html;
+  sheetBody.scrollTop=0;
+  sheet.classList.add("on");
+  sheetMask.classList.add("on");
+  document.body.style.overflow="hidden";
+}
+
+function closeSheet(){
+  sheet.classList.remove("on");
+  sheetMask.classList.remove("on");
+  sheet.style.transform="";
+  document.body.style.overflow="";
+}
+
+sheetMask.addEventListener("click",closeSheet);
+document.getElementById("sheetClose").addEventListener("click",closeSheet);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
+
+let gripY=0,dragging=false;
+const grip=document.getElementById("sheetGrip");
+grip.addEventListener("touchstart",e=>{gripY=e.touches[0].clientY;dragging=true},{passive:true});
+grip.addEventListener("touchmove",e=>{
+  if(!dragging||window.innerWidth>=700)return;
+  const dy=e.touches[0].clientY-gripY;
+  if(dy>0)sheet.style.transform="translateY("+dy+"px)";
+},{passive:true});
+grip.addEventListener("touchend",e=>{
+  if(!dragging)return;dragging=false;
+  const dy=e.changedTouches[0].clientY-gripY;
+  sheet.style.transform="";
+  if(dy>80)closeSheet();
+});
+
+document.getElementById("nowBox").addEventListener("click",()=>{
+  if(nowCourse)openSheet(nowCourse.course,nowCourse.date);
+});
 
 function tick(){
   let n=new Date(),w=aw(n);
@@ -447,7 +920,11 @@ function tick(){
   document.getElementById("termProgress").style.width=(passed/totalDays*100).toFixed(1)+"%";
   renderToday(n);renderNow(n)
 }
-renderStrip();tick();setInterval(tick,1000);
+renderCourseIndex();
+renderStrip();
+syncTableModeUI();
+tick();
+setInterval(tick,1000);
 
 // offline
 const offlineBanner=document.getElementById("offlineBanner");
