@@ -1,25 +1,32 @@
 {
-  "name": "我的研究生课表",
-  "short_name": "我的课表",
-  "description": "按当前时间自动显示今天、本周、当前课程和下一门课。",
+  "name": "杭高院课程表 · 2026 秋",
+  "short_name": "HIAS课表",
+  "description": "按当前时间自动显示今天、本周、当前课程和下一门课，可查看课程大纲与上课地点。",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#f4f6fa",
-  "theme_color": "#f4f6fa",
+  "background_color": "#f6f3ec",
+  "theme_color": "#f6f3ec",
+  "lang": "zh-CN",
   "icons": [
     {
       "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

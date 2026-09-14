@@ -1,10 +1,11 @@
-const CACHE_NAME = "my-schedule-v6";
+const CACHE_NAME = "my-schedule-v8";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icons/icon-512.png",
+  "./icons/icon-maskable-512.png"
 ];
 
 self.addEventListener("install", event => {
@@ -21,14 +22,23 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
-  if (event.request.method !== "GET") return;
+  const req = event.request;
+  if (req.method !== "GET") return;
+
+  // 首页之外的跨域请求（天气接口）交给浏览器直连：
+  // 否则接口响应会被缓存下来，之后一直读到过期数据；
+  // 而且断网时 catch 分支会拿 index.html 去顶上，返回一段 HTML 给 JSON 接口。
+  let url;
+  try { url = new URL(req.url); } catch (e) { return; }
+  if (url.origin !== self.location.origin) return;
+
   event.respondWith(
-    fetch(event.request)
+    fetch(req)
       .then(response => {
         const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
         return response;
       })
-      .catch(() => caches.match(event.request).then(r => r || caches.match("./index.html")))
+      .catch(() => caches.match(req).then(r => r || caches.match("./index.html")))
   );
 });
