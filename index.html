@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f6f3ec">
+<meta name="theme-color" content="#f6f3ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#17171b" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -367,11 +368,26 @@ button{font:inherit}
 }
 </style>
 <script>
+/* 主题抢跑：必须在浏览器「第一次读 theme-color」之前就把值定好。
+   安卓 Chrome 是进入页面时读一遍这个 meta，等页尾脚本再改就晚了，
+   状态栏会一直停在文档里那个静态初始值上（之前踩的就是这个坑）。
+
+   为什么不能只靠 manifest：manifest 的 theme_color 是静态文件，
+   装进 App 壳里就固定了，无法跟随 App 内切换的主题。
+   而 MDN 明确：meta 存在时优先级高于 manifest —— 所以状态栏
+   要「跟主题变色」，只能靠这条由 JS 抢先写入的、不带 media 的 meta。
+
+   文档里另外那两条带 media 的 theme-color 是给 JS 没跑起来时兜底用的
+   （那种情况下跟随系统日夜模式）。 */
 (function(){
   try{
     var m=localStorage.getItem("hiasTheme")||"auto";
     var dark=(m==="dark")||(m!=="light"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);
     document.documentElement.dataset.theme=dark?"dark":"light";
+    var t=document.createElement("meta");
+    t.setAttribute("name","theme-color");
+    t.setAttribute("content",dark?"#17171b":"#f6f3ec");
+    document.head.insertBefore(t,document.querySelector('meta[name="theme-color"]')||document.head.firstChild);
   }catch(e){}
 })();
 </script>
@@ -1235,8 +1251,16 @@ function resolvedTheme(){return themeMode==="auto"?(mqDark.matches?"dark":"light
 function syncThemeUI(){
   const r=resolvedTheme();
   document.documentElement.dataset.theme=r;
-  const meta=document.querySelector('meta[name="theme-color"]');
-  if(meta)meta.setAttribute("content",r==="dark"?"#17171b":"#f6f3ec");
+  // 状态栏/标题栏配色：只认「不带 media 的那条」theme-color（它优先级最高）。
+  // 正常情况下 head 抢跑脚本已经建好这条了，这里只负责切主题时同步更新；
+  // 万一没建起来（例如抢跑脚本被拦）就现建一条放到最前面。
+  let meta=document.querySelector('meta[name="theme-color"]:not([media])');
+  if(!meta){
+    meta=document.createElement("meta");
+    meta.setAttribute("name","theme-color");
+    document.head.insertBefore(meta,document.head.firstChild);
+  }
+  meta.setAttribute("content",r==="dark"?"#17171b":"#f6f3ec");
   // iOS 独立窗口：深色下状态栏文字要翻成白色，否则"深底深字"看不见（下次启动生效）
   const sb=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
   if(sb)sb.setAttribute("content",r==="dark"?"black-translucent":"default");
