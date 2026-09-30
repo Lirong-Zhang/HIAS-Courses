@@ -521,7 +521,7 @@ button{font:inherit}
 (()=>{
 const TERM_START=new Date(2026,7,31),TERM_END=new Date(2027,0,17),DAY=86400000;
 const pt={1:["08:30","09:15"],2:["09:20","10:05"],3:["10:25","11:10"],4:["11:15","12:00"],5:["13:30","14:15"],6:["14:20","15:05"],7:["15:25","16:10"],8:["16:15","17:00"],9:["17:05","17:50"],10:["18:30","19:15"],11:["19:20","20:05"],12:["20:15","21:00"],13:["21:05","21:50"]};
-const w3_5_7_18=[3,4,5,...Array.from({length:12},(_,i)=>i+7)],w11_20=Array.from({length:10},(_,i)=>i+11),w9_17_19=[...Array.from({length:9},(_,i)=>i+9),19],w6_14=Array.from({length:9},(_,i)=>i+6),w7_11_14_17=[7,8,9,10,11,14,15,16,17],w4_5_7_14=[4,5,...Array.from({length:8},(_,i)=>i+7)];
+const w3_5_7_18=[3,4,5,...Array.from({length:12},(_,i)=>i+7)],w11_20=Array.from({length:10},(_,i)=>i+11),w9_17_19=[...Array.from({length:9},(_,i)=>i+9),19],w6_14=Array.from({length:9},(_,i)=>i+6),w7_11_14_17=[7,8,9,10,11,14,15,16,17],w8_11_14_17=[8,9,10,11,14,15,16,17],w4_5_7_14=[4,5,...Array.from({length:8},(_,i)=>i+7)];
 const cs=[
 {id:"nlp",name:"自然语言处理",day:1,start:1,end:3,weeks:w11_20,credits:3,type:"专业学位课 · 核心课",cls:"degree",loc:"5号楼4层多功能厅",locShort:"5号楼4F"},
 {id:"nlp",name:"自然语言处理",day:3,start:6,end:8,weeks:w11_20,credits:3,type:"专业学位课 · 核心课",cls:"degree",loc:"5号楼4层多功能厅",locShort:"5号楼4F"},
@@ -532,7 +532,8 @@ const cs=[
 {id:"db",name:"高级数据库系统",day:2,start:12,end:13,weeks:w11_20,credits:2,type:"专业学位课 · 专业课",cls:"degree",loc:"13-310",locShort:"13-310"},
 {id:"db",name:"高级数据库系统",day:3,start:3,end:4,weeks:w11_20,credits:2,type:"专业学位课 · 专业课",cls:"degree",loc:"13-305",locShort:"13-305"},
 {id:"marx",name:"新时代中国特色社会主义理论与实践",day:5,start:5,end:8,weeks:w6_14,credits:2,type:"公共学位课",cls:"pubdegree",loc:"5号楼4层多功能厅",locShort:"5号楼4F"},
-{id:"dialectic",name:"自然辩证法概论",day:6,start:1,end:4,weeks:w7_11_14_17,credits:1,type:"公共学位课",cls:"pubdegree",loc:"文体中心3楼报告厅",locShort:"文体中心3F"},
+{id:"dialectic",name:"自然辩证法概论",day:5,start:10,end:13,weeks:[7],credits:1,type:"公共学位课",cls:"pubdegree",loc:"6号楼3楼报告厅",locShort:"6号楼3F"},
+{id:"dialectic",name:"自然辩证法概论",day:6,start:1,end:4,weeks:w8_11_14_17,credits:1,type:"公共学位课",cls:"pubdegree",loc:"文体中心3楼报告厅",locShort:"文体中心3F"},
 {id:"startup",name:"创业融资入门",day:1,start:5,end:7,weeks:w4_5_7_14,credits:1,type:"公共选修课 · 创新创业",cls:"elect",loc:"13-111",locShort:"13-111"},
 {id:"tennis",name:"网球-02班",day:2,start:3,end:4,weeks:w3_5_7_18,credits:.5,type:"公共选修课 · 体育",cls:"elect",loc:"网球场",locShort:"网球场"}];
 
@@ -958,7 +959,7 @@ function renderCourseIndex(){
       <div class="ci-txt">
         <b>${esc(det.name)}</b>
         <span>${esc(det.attr)} · ${det.credits} 学分 · 主讲 ${esc(det.teacher)}</span>
-        <span>${ents.map(x=>wn[x.day]+" 第 "+x.start+"–"+x.end+" 节").join(" / ")} · ${esc(e.loc)}</span>
+        <span>${ents.map(x=>wn[x.day]+" 第 "+x.start+"–"+x.end+" 节 · "+x.loc).join(" / ")}</span>
       </div>
       <span class="ci-arrow">›</span>
     </div>`;
@@ -1249,7 +1250,7 @@ function tick(){
 /* ============ 外观主题：跟随系统 / 浅色 / 深色 ============ */
 const THEME_KEY="hiasTheme";
 /* 版本号：每次发布都要和 sw.js 的 CACHE_NAME 一起 +1（页面上会显示，用来确认手机上的版本）。 */
-const APP_VER="v11";
+const APP_VER="v12";
 let themeMode="auto";
 try{const s=localStorage.getItem(THEME_KEY);if(s==="auto"||s==="light"||s==="dark")themeMode=s}catch(e){}
 const mqDark=window.matchMedia("(prefers-color-scheme: dark)");
