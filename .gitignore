@@ -8,3 +8,4 @@ __*.html
 
 # 智能体工作目录（本地项目笔记，不发布到公开仓库）
 .workbuddy/
+ARIA_PROJECT_BRIEF.md

@@ -29,6 +29,7 @@
   --mask:rgba(40,32,14,.42);
   --hero-a:#fff;--hero-b:#fdfaf2;
   --now-a:#fdf6e3;--now-b:#fefbf3;--now-line:#ecdcb4;
+  --ev:#a83a2c;--ev-bg:#fbeae7;--ev-line:#f0cbc4;--ev-soft:#fdf5f3;
   --r:18px;
   --shadow:0 6px 20px rgba(74,58,22,.06);
   --shadow-lg:0 12px 32px rgba(74,58,22,.10);
@@ -50,6 +51,7 @@
   --mask:rgba(0,0,0,.62);
   --hero-a:#232329;--hero-b:#1e1e24;
   --now-a:rgba(220,174,83,.13);--now-b:rgba(220,174,83,.05);--now-line:rgba(220,174,83,.28);
+  --ev:#ec9a8d;--ev-bg:rgba(236,154,141,.16);--ev-line:rgba(236,154,141,.32);--ev-soft:rgba(236,154,141,.07);
   --shadow:0 6px 20px rgba(0,0,0,.36);
   --shadow-lg:0 12px 32px rgba(0,0,0,.46);
   --sheet-shadow:0 -14px 44px rgba(0,0,0,.58);
@@ -173,7 +175,11 @@ button{font:inherit}
 .daybtn.today{border-color:var(--accent-line);background:var(--accent-bg)}
 .daybtn.today .w,.daybtn.today .d{color:var(--accent-dark)}
 .daybtn.selected{outline:2px solid var(--accent);outline-offset:-2px}
-.daybtn.has::after{content:"";display:block;width:4px;height:4px;border-radius:50%;background:var(--accent);margin:3px auto 0}
+.daybtn .mk{display:flex;align-items:center;justify-content:center;gap:3px;height:5px;margin-top:3px}
+.daybtn .mk i{display:block;width:4px;height:4px;border-radius:50%}
+.daybtn .mk i.c{background:var(--accent)}
+.daybtn .mk i.e{background:var(--ev)}
+.daybtn.today .mk i.c{background:var(--accent-dark)}
 .selected-date{font-size:12px;font-weight:800;margin:11px 0 2px}
 .mini-course{display:flex;gap:9px;padding:9px 0;border-bottom:1px solid var(--line)}
 .mini-course:last-child{border-bottom:0}
@@ -182,6 +188,7 @@ button{font:inherit}
 .mini-course span{font-size:11px;color:var(--muted)}
 .legend{display:flex;flex-wrap:wrap;gap:6px}
 .legend span{font-size:10px;padding:4px 7px;border-radius:999px}
+.legend .ev-tag{background:var(--ev-bg);color:var(--ev)}
 .note{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:0}
 .offline{display:none;margin-bottom:12px;padding:9px 12px;border-radius:12px;background:var(--warn-bg);color:var(--warn);font-size:12px;font-weight:700}
 .install{display:none;width:100%;border:0;background:var(--accent);color:var(--on-accent);border-radius:13px;padding:12px 14px;font-weight:800;margin-bottom:12px}
@@ -218,6 +225,9 @@ button{font:inherit}
   grid-template-rows:34px repeat(13,38px);
   width:652px;min-width:100%
 }
+/* 有日程的那一周：表头下面多出一行「全天」，用 auto 行高，1～3 条都放得下 */
+.week-table.ev{grid-template-rows:34px auto repeat(13,30px)}
+.week-table.wide.ev{grid-template-rows:34px auto repeat(13,38px)}
 .wt-head,.wt-period,.wt-cell{
   border-right:1px solid var(--line);
   border-bottom:1px solid var(--line);
@@ -264,6 +274,31 @@ button{font:inherit}
 .wt-course.degree{background:var(--accent-bg);color:var(--accent-dark);border-color:var(--accent-line)}
 .wt-course.pubdegree{background:var(--green-bg);color:var(--green);border-color:var(--green-line)}
 .wt-course.elect{background:var(--purple-bg);color:var(--purple);border-color:var(--purple-line)}
+/* 整周课表顶部的「全天」行：只有这一周有日程时才会插进来（见 .week-table.ev 的行模板）。
+   课表讲的是「第几节」，日程讲的是「哪一天」，所以单独占一行，不跟课块抢格子。 */
+.wt-label{
+  display:flex;align-items:center;justify-content:center;background:var(--card-2);color:var(--muted);
+  border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  font-size:9px;font-weight:850;letter-spacing:.2px;padding:0 2px
+}
+.wt-evcell{
+  border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--card-2);
+  padding:2px;display:flex;flex-direction:column;gap:2px;min-height:24px;min-width:0
+}
+.wt-evcell.is-today{background:var(--today-bg)}
+.wt-ev{
+  display:flex;align-items:center;gap:4px;min-width:0;
+  border:1px solid var(--ev-line);background:var(--ev-bg);color:var(--ev);
+  border-radius:7px;padding:2px 5px;font-size:9.5px;font-weight:850;line-height:1.25;
+  cursor:pointer;transition:transform .12s,filter .12s
+}
+.wt-ev:active{transform:scale(.97);filter:brightness(.96)}
+.wt-ev .k{display:none;flex:0 0 auto;font-size:8px;font-weight:800;padding:1px 4px;border-radius:999px;background:var(--ev);color:var(--on-accent)}
+.wt-ev .t{min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wt-ev.more{justify-content:center;background:var(--surface-3);border-color:var(--line);color:var(--muted)}
+.week-table.wide .wt-ev{font-size:10px}
+.week-table.wide .wt-ev .k{display:inline-block}
+.week-table.wide .wt-label{position:sticky;left:0;z-index:4;box-shadow:1px 0 0 var(--line)}
 .table-hint{font-size:11px;color:var(--muted);line-height:1.6;margin:9px 0 0}
 .course{cursor:pointer;transition:transform .12s,filter .12s}
 .course:active{transform:scale(.99);filter:brightness(.98)}
@@ -283,7 +318,11 @@ button{font:inherit}
 .ci-arrow{color:var(--faint);font-size:15px;text-align:right}
 @media(min-width:700px){
   .week-table{grid-template-columns:50px repeat(7,minmax(0,1fr));grid-template-rows:36px repeat(13,38px)}
+  .week-table.ev{grid-template-rows:36px auto repeat(13,38px)}
   .week-table.wide{grid-template-columns:50px repeat(7,92px);width:694px}
+  .week-table.wide.ev{grid-template-rows:36px auto repeat(13,38px)}
+  .wt-ev{font-size:10px}
+  .wt-ev .k{display:inline-block}
   .week-overview-title span{font-size:11px}
   .wt-course .wt-name{font-size:10.5px}
   .wt-course .wt-kind{font-size:8.5px}
@@ -291,6 +330,63 @@ button{font:inherit}
   .wt-course .wt-locshort{display:block}
 }
 
+/* ===== 日程：卡片 / 当天提醒 / 顶部「下一项」 ===== */
+.ev-strip{display:none;margin-top:11px}
+.ev-pill{
+  width:100%;display:flex;align-items:center;gap:8px;text-align:left;
+  border:1px solid var(--ev-line);background:var(--ev-soft);color:var(--text);
+  border-radius:14px;padding:10px 12px;font-size:12.5px;font-weight:800;
+  cursor:pointer;transition:transform .12s,filter .12s
+}
+.ev-pill:active{transform:scale(.99);filter:brightness(.98)}
+.ev-pill .ic{display:flex;flex:0 0 auto}
+.ev-pill .ic svg{width:16px;height:16px;display:block}
+.ev-pill .k{
+  flex:0 0 auto;font-size:10px;font-weight:850;padding:2px 7px;border-radius:999px;
+  background:var(--ev-bg);border:1px solid var(--ev-line);color:var(--ev)
+}
+.ev-pill .tt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev-pill .cd{margin-left:auto;flex:0 0 auto;font-size:11px;font-weight:850;color:var(--ev);white-space:nowrap}
+.today-events{display:grid;gap:7px}
+.today-events:not(:empty){margin-bottom:11px}
+.te{
+  display:grid;grid-template-columns:4px minmax(0,1fr);gap:10px;align-items:start;
+  border:1px solid var(--ev-line);background:var(--ev-soft);border-radius:13px;padding:10px 11px;
+  cursor:pointer;transition:transform .12s,filter .12s
+}
+.te:active{transform:scale(.99);filter:brightness(.98)}
+.te .bar{width:4px;align-self:stretch;border-radius:999px;background:var(--ev)}
+.te b{display:block;font-size:13.5px;line-height:1.35}
+.te b i{
+  font-style:normal;display:inline-block;font-size:10px;font-weight:850;line-height:1;
+  padding:3px 7px;border-radius:999px;background:var(--ev-bg);border:1px solid var(--ev-line);
+  color:var(--ev);margin-left:6px;vertical-align:1px
+}
+.te span{display:block;font-size:11px;color:var(--muted);line-height:1.5;margin-top:2px}
+.day-events{display:grid;gap:7px;margin:2px 0 6px}
+.agenda{display:grid;gap:8px}
+.ag{
+  display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:10px;align-items:center;
+  border:1px solid var(--line);border-radius:13px;padding:10px 11px;background:var(--card-2);
+  cursor:pointer;transition:transform .12s,filter .12s
+}
+.ag:active{transform:scale(.99);filter:brightness(.98)}
+.ag.on{border-color:var(--ev-line);background:var(--ev-soft)}
+.ag-date{text-align:center;border-right:1px solid var(--line);padding-right:9px}
+.ag-date b{display:block;font-size:14px;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.ag-date span{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+.ag-main{min-width:0}
+.ag-main b{display:block;font-size:13.5px;line-height:1.35}
+.ag-main b i{
+  font-style:normal;display:inline-block;font-size:10px;font-weight:850;line-height:1;
+  padding:3px 7px;border-radius:999px;background:var(--ev-bg);border:1px solid var(--ev-line);
+  color:var(--ev);margin-left:6px;vertical-align:1px
+}
+.ag-main span{display:block;font-size:11px;color:var(--muted);line-height:1.5;margin-top:2px}
+.ag-cd{
+  font-size:11px;font-weight:850;color:var(--ev);background:var(--ev-bg);
+  border:1px solid var(--ev-line);border-radius:999px;padding:4px 9px;white-space:nowrap
+}
 .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .seg button{
   min-width:0;border:1px solid var(--line);background:var(--card-2);color:var(--muted);
@@ -343,6 +439,7 @@ button{font:inherit}
 .now-card .nc-t{font-size:15px;font-weight:850;margin-top:3px;line-height:1.3}
 .now-card .nc-m{font-size:12px;margin-top:3px;font-weight:700}
 .now-card .nc-l{font-size:12px;margin-top:2px}
+.now-card.ev-card{border-color:var(--ev-line);background:var(--ev-soft);color:var(--ev)}
 .sheet-body .row{display:grid;grid-template-columns:86px minmax(0,1fr);gap:11px;padding:11px 0;border-top:1px solid var(--line)}
 .sheet-body .row:first-child{border-top:0;padding-top:0}
 .sheet-body .k{font-size:11px;color:var(--muted);font-weight:800;line-height:1.5}
@@ -427,6 +524,7 @@ button{font:inherit}
     <div class="semester-pill" id="termStatus">秋季学期</div>
   </div>
   <div class="progress" aria-label="学期进度"><span id="termProgress"></span></div>
+  <div class="ev-strip" id="evStrip"></div>
 
   <div class="nowbox" id="nowBox">
     <div class="label">当前状态</div>
@@ -439,7 +537,14 @@ button{font:inherit}
 <div class="today-grid">
 <section class="card">
   <div class="section-title"><h2>今天</h2><span class="badge" id="todayCount">0 门课</span></div>
+  <div class="today-events" id="todayEvents"></div>
   <div class="course-list" id="todayCourses"></div>
+</section>
+
+<section class="card">
+  <div class="section-title"><h2>日程</h2><span class="badge" id="agendaBadge">—</span></div>
+  <div class="agenda" id="agendaList"></div>
+  <p class="note">日程按具体日期走，不受教学周限制：报名、比赛、考试、出行这类安排都放这里，也会自动出现在整周课表顶部那一行。</p>
 </section>
 
 <section class="card">
@@ -479,11 +584,12 @@ button{font:inherit}
 </section>
 
 <section class="card">
-  <div class="section-title"><h2>课程类型</h2></div>
+  <div class="section-title"><h2>颜色图例</h2></div>
   <div class="legend">
     <span class="degree">专业学位课 · 核心课 / 专业课</span>
     <span class="pubdegree">公共学位课</span>
     <span class="elect">公共选修课</span>
+    <span class="ev-tag">日程 · 全天安排</span>
   </div>
   <p class="note">
     页面直接读取手机当前日期和时间，自动判断教学周、今天课程、当前课程和下一门课。<br>
@@ -699,6 +805,16 @@ tennis:{
 }
 };
 
+/* ===== 日程（不受教学周限制的安排：报名、比赛、考试、出行…） =====
+   和 cs 分开：课程按教学周循环，日程只发生在具体某一天。
+   加一条就在这里追加一条；from / to 用 "YYYY-MM-DD"；有固定时间写 time:"07:30"（不写即全天）。
+   改完记得把 APP_VER 和 sw.js 的 CACHE_NAME 一起 +1。 */
+const EV_KIND={race:"比赛",exam:"考试",due:"截止",trip:"出行",meet:"约",other:"日程"};
+const EVENTS=[
+  {id:"xihu-half",title:"西湖大学半程马拉松",short:"半马",kind:"race",
+   from:"2026-10-11",loc:"西湖大学",note:"半程 21.0975 km；枪声时间待定，确定后再改成具体时间。"}
+];
+
 const wn=["周日","周一","周二","周三","周四","周五","周六"];
 let viewStart=monday(new Date()),sel=strip(new Date());
 
@@ -742,9 +858,86 @@ function courseStartDate(date,c){
   return new Date(date.getFullYear(),date.getMonth(),date.getDate(),h,m,0);
 }
 
+/* ============ 日程 ============ */
+function ymd(s){const a=String(s).split("-").map(Number);return new Date(a[0],a[1]-1,a[2])}
+function daysTo(d){return Math.round((strip(d)-strip(new Date()))/DAY)}
+function evDays(ev){
+  const a=ymd(ev.from),b=ymd(ev.to||ev.from),out=[];
+  for(let d=new Date(a);+d<=+b;d.setDate(d.getDate()+1))out.push(strip(new Date(d)));
+  return out;
+}
+function evOn(d){
+  const t=+strip(d);
+  return EVENTS.filter(ev=>evDays(ev).some(x=>+x===t))
+    .sort((x,y)=>String(x.time||"00:00").localeCompare(String(y.time||"00:00")));
+}
+function findEv(id){return EVENTS.find(e=>e.id===id)||null}
+function evKind(ev){return EV_KIND[ev.kind]||"日程"}
+function evWhen(ev){
+  const n=evDays(ev).length;
+  return (ev.time?ev.time+" 开始":"全天")+(n>1?" · 共 "+n+" 天":"")+(ev.loc?" · "+ev.loc:"");
+}
+function evCd(ev){
+  const a=daysTo(ymd(ev.from)),b=daysTo(ymd(ev.to||ev.from));
+  if(b<0)return "已结束";
+  if(a>0)return a===1?"明天":"还有 "+a+" 天";
+  if(b>0)return "进行中";
+  return "今天";
+}
+function evRowHtml(ev){
+  return `<div class="te" data-id="${ev.id}"><i class="bar"></i><div><b>${esc(ev.title)}<i>${esc(evKind(ev))}</i></b><span>${esc(evWhen(ev))}</span></div></div>`;
+}
+function bindEvRows(root){
+  root.querySelectorAll(".te").forEach(x=>x.addEventListener("click",()=>openEventSheet(findEv(x.dataset.id))));
+}
+function evIconSvg(){
+  return '<svg viewBox="0 0 24 24" aria-hidden="true">'
+    +'<rect x="3.2" y="5.4" width="17.6" height="15.2" rx="2.8" fill="none" stroke="var(--ev)" stroke-width="1.8"/>'
+    +'<path d="M3.2 9.8h17.6" stroke="var(--ev)" stroke-width="1.8"/>'
+    +'<path d="M8 3.6v3.6M16 3.6v3.6" stroke="var(--ev)" stroke-width="1.8" stroke-linecap="round"/>'
+    +'<circle cx="12" cy="15" r="2.1" fill="var(--ev)"/></svg>';
+}
+function renderTodayEvents(n){
+  const box=document.getElementById("todayEvents");
+  box.innerHTML=evOn(n).map(evRowHtml).join("");
+  bindEvRows(box);
+}
+function renderAgenda(){
+  const today=strip(new Date());
+  const items=EVENTS.map(ev=>({ev:ev,a:+ymd(ev.from),b:+evDays(ev)[evDays(ev).length-1]}))
+    .filter(x=>x.b>=+today).sort((x,y)=>x.a-y.a);
+  document.getElementById("agendaBadge").textContent=items.length?items.length+" 项":"暂无";
+  const box=document.getElementById("agendaList");
+  if(!items.length){box.innerHTML='<div class="empty">近期没有日程安排</div>';return}
+  box.innerHTML=items.map(({ev})=>{
+    const a=ymd(ev.from);
+    const ds=`${a.getMonth()+1}/${a.getDate()}`;
+    const on=daysTo(a)<=0;
+    return `<div class="ag${on?" on":""}" data-id="${ev.id}">
+      <div class="ag-date"><b>${ds}</b><span>${wn[a.getDay()]}</span></div>
+      <div class="ag-main"><b>${esc(ev.title)}<i>${esc(evKind(ev))}</i></b><span>${esc(evWhen(ev))}</span></div>
+      <div class="ag-cd">${evCd(ev)}</div></div>`;
+  }).join("");
+  box.querySelectorAll(".ag").forEach(x=>x.addEventListener("click",()=>openEventSheet(findEv(x.dataset.id))));
+}
+function renderEventStrip(){
+  const box=document.getElementById("evStrip");
+  const today=strip(new Date());
+  const up=EVENTS.filter(ev=>+evDays(ev)[evDays(ev).length-1]>=+today)
+    .sort((x,y)=>+ymd(x.from)-+ymd(y.from));
+  const ev=up[0];
+  if(!ev){box.style.display="none";box.innerHTML="";return}
+  box.style.display="block";
+  box.innerHTML=`<button class="ev-pill" type="button"><span class="ic">${evIconSvg()}</span>`
+    +`<span class="k">${esc(evKind(ev))}</span><span class="tt">${esc(ev.title)}</span>`
+    +`<span class="cd">${evCd(ev)}</span></button>`;
+  box.querySelector(".ev-pill").addEventListener("click",()=>openEventSheet(ev));
+}
+
 function renderToday(n){
-  let l=list(n),el=document.getElementById("todayCourses");
-  document.getElementById("todayCount").textContent=l.length+" 门课";
+  let l=list(n),el=document.getElementById("todayCourses"),evs=evOn(n);
+  document.getElementById("todayCount").textContent=l.length+" 门课"+(evs.length?" · "+evs.length+" 日程":"");
+  renderTodayEvents(n);
   el.innerHTML=l.length?l.map((c,i)=>`<article class="course" data-i="${i}">
     <div class="time">${ctime(c)}<span>${c.start}–${c.end} 节</span></div>
     <div><h3>${c.name}</h3><div class="meta">第 ${aw(n)} 周 · ${c.credits} 学分</div><div class="meta">地点：${c.loc}</div><span class="type ${c.cls}">${c.type}</span></div>
@@ -819,6 +1012,9 @@ function renderWeekTable(){
   document.getElementById("weekOverviewLabel").textContent=w?`第 ${w} 周实际课程`:"非教学周";
   table.innerHTML="";
   table.classList.toggle("wide",wide);
+  const evw=EVENTS.filter(ev=>evDays(ev).some(d=>+monday(d)===+viewStart));
+  const off=evw.length?1:0;
+  table.classList.toggle("ev",!!off);
   wrap.scrollLeft=0;
 
   const corner=document.createElement("div");
@@ -846,7 +1042,7 @@ function renderWeekTable(){
     const p=document.createElement("div");
     p.className="wt-period";
     p.style.gridColumn="1";
-    p.style.gridRow=String(r+1);
+    p.style.gridRow=String(r+1+off);
     p.innerHTML=`<b>${r}</b><span>${pt[r][0]}</span>`;
     table.appendChild(p);
 
@@ -857,9 +1053,38 @@ function renderWeekTable(){
       cell.className="wt-cell";
       if(+d===+today)cell.classList.add("is-today");
       cell.style.gridColumn=String(c);
-      cell.style.gridRow=String(r+1);
+      cell.style.gridRow=String(r+1+off);
       table.appendChild(cell);
     }
+  }
+
+  if(off){
+    const lab=document.createElement("div");
+    lab.className="wt-label";
+    lab.style.gridColumn="1";lab.style.gridRow="2";
+    lab.textContent="全天";
+    table.appendChild(lab);
+    DAYORDER.forEach((wd,idx)=>{
+      const d=new Date(viewStart);d.setDate(d.getDate()+idx);
+      const cell=document.createElement("div");
+      cell.className="wt-evcell";
+      if(+d===+today)cell.classList.add("is-today");
+      cell.style.gridColumn=String(colOf(wd));cell.style.gridRow="2";
+      const de=evOn(d);
+      de.slice(0,3).forEach(ev=>{
+        const chip=document.createElement("div");
+        chip.className="wt-ev";
+        chip.innerHTML=`<i class="k">${esc(evKind(ev))}</i><span class="t">${esc(wide?ev.title:(ev.short||ev.title))}</span>`;
+        chip.title=`${ev.title} · ${evWhen(ev)}`;
+        chip.addEventListener("click",()=>openEventSheet(ev));
+        cell.appendChild(chip);
+      });
+      if(de.length>3){
+        const m=document.createElement("div");m.className="wt-ev more";m.textContent="+"+(de.length-3);
+        cell.appendChild(m);
+      }
+      table.appendChild(cell);
+    });
   }
 
   if(!w) return;
@@ -872,7 +1097,7 @@ function renderWeekTable(){
     const block=document.createElement("div");
     block.className=`wt-course ${c.cls}`;
     block.style.gridColumn=String(colOf(c.day));
-    block.style.gridRow=`${c.start+1} / ${c.end+2}`;
+    block.style.gridRow=`${c.start+1+off} / ${c.end+2+off}`;
     block.title=`${c.name} · ${wn[c.day]} ${ctime(c)} · ${c.loc}`;
     block.innerHTML=wide
       ? `<span class="wt-kind">${shortType(c.type)}</span>
@@ -908,15 +1133,16 @@ function renderStrip(){
     let b=document.createElement("button");b.type="button";b.className="daybtn";
     if(+d===+td)b.classList.add("today");
     if(+d===+sel)b.classList.add("selected");
-    if(list(d).length)b.classList.add("has");
-    b.innerHTML=`<div class="w">${wn[d.getDay()].replace("周","")}</div><div class="d">${d.getDate()}</div>`;
+    const hasC=list(d).length?1:0,hasE=evOn(d).length?1:0;
+    b.innerHTML=`<div class="w">${wn[d.getDay()].replace("周","")}</div><div class="d">${d.getDate()}</div><div class="mk">${hasC?'<i class="c"></i>':""}${hasE?'<i class="e"></i>':""}</div>`;
     b.addEventListener("click",()=>{sel=strip(d);renderStrip()});s.appendChild(b)
   }
-  let el=document.getElementById("selectedDayCourses"),l=list(sel),w=aw(sel),
+  let el=document.getElementById("selectedDayCourses"),evs=evOn(sel),l=list(sel),w=aw(sel),
       head=`${sel.getMonth()+1}月${sel.getDate()}日 · ${wn[sel.getDay()]}${w?` · 第${w}周`:""}`;
-  el.innerHTML=`<div class="selected-date">${head}</div>`+(l.length?l.map((c,i)=>`
+  el.innerHTML=`<div class="selected-date">${head}</div>`+(evs.length?`<div class="day-events">${evs.map(evRowHtml).join("")}</div>`:"")+(l.length?l.map((c,i)=>`
     <div class="mini-course" data-i="${i}"><div class="dot"></div><div><b>${c.name}</b><span>${ctime(c)} · ${c.start}–${c.end}节 · ${c.type}</span><span>地点：${c.loc}</span></div></div>
   `).join(""):`<div class="mini-course"><div class="dot" style="background:var(--line-2)"></div><div><b>没有课</b><span>这一天没有已录入课程</span></div></div>`);
+  bindEvRows(el);
   el.querySelectorAll(".mini-course[data-i]").forEach(node=>{
     const c=l[Number(node.dataset.i)];
     node.addEventListener("click",()=>openSheet(c,sel));
@@ -1026,6 +1252,32 @@ function openSheet(c,date){
   html+=`<div class="row"><div class="k">参考书</div><div class="v">${listBlock(det.refs,"官网未提供参考书")}</div></div>`;
   html+=`<div class="row"><div class="k">教师简介</div><div class="v">${esc(det.bio||"官网未提供").split("\n").join("<br>")}</div></div>`;
   html+=`<p class="sheet-foot">以上内容来自课程官网教学大纲，仅供参考，以任课教师实际通知为准。</p>`;
+
+  sheetBody.innerHTML=html;
+  sheetBody.scrollTop=0;
+  sheet.classList.add("on");
+  sheetMask.classList.add("on");
+  document.body.style.overflow="hidden";
+}
+
+function openEventSheet(ev){
+  if(!ev)return;
+  const a=ymd(ev.from),b=ev.to?ymd(ev.to):null,d=daysTo(a);
+  document.getElementById("sheetTitle").textContent=ev.title;
+  document.getElementById("sheetSub").textContent=[
+    evKind(ev),
+    ev.time?ev.time+" 开始":"全天",
+    `${a.getFullYear()}年${a.getMonth()+1}月${a.getDate()}日 ${wn[a.getDay()]}`+((b&&+b!==+a)?` – ${b.getMonth()+1}月${b.getDate()}日`:"")
+  ].filter(Boolean).join(" · ");
+
+  let html=`<div class="now-card ev-card">
+    <div class="nc-k">${d>0?"距这项安排还有 "+d+" 天":(d===0?"就是今天":"已经过去")}</div>
+    <div class="nc-t">${a.getMonth()+1}月${a.getDate()}日 ${wn[a.getDay()]}</div>
+    <div class="nc-m">${ev.time?ev.time+" 开始":"全天安排"}</div>
+    ${ev.loc?`<div class="nc-l">${esc(ev.loc)}</div>`:""}
+  </div>`;
+  if(ev.note)html+=`<div class="row"><div class="k">备注</div><div class="v">${esc(ev.note)}</div></div>`;
+  html+=`<p class="sheet-foot">这条日程由 Aria 记录：课程看课表，日程看这里。时间、地点有变化随时说一声。</p>`;
 
   sheetBody.innerHTML=html;
   sheetBody.scrollTop=0;
@@ -1236,6 +1488,7 @@ function wxLoad(){
     .catch(()=>{if(!cached)wxFail()});
 }
 
+let lastDayKey="";
 function tick(){
   let n=new Date(),w=aw(n);
   document.getElementById("dateText").textContent=`${n.getMonth()+1}月${n.getDate()}日 ${wn[n.getDay()]}`;
@@ -1245,12 +1498,14 @@ function tick(){
   const totalDays=Math.max(1,Math.floor((TERM_END-TERM_START)/DAY)+1);
   const passed=Math.min(totalDays,Math.max(0,Math.floor((strip(n)-TERM_START)/DAY)+1));
   document.getElementById("termProgress").style.width=(passed/totalDays*100).toFixed(1)+"%";
+  const dayKey=+strip(n);
+  if(dayKey!==lastDayKey){lastDayKey=dayKey;renderAgenda();renderEventStrip()}
   renderToday(n);renderNow(n)
 }
 /* ============ 外观主题：跟随系统 / 浅色 / 深色 ============ */
 const THEME_KEY="hiasTheme";
 /* 版本号：每次发布都要和 sw.js 的 CACHE_NAME 一起 +1（页面上会显示，用来确认手机上的版本）。 */
-const APP_VER="v12";
+const APP_VER="v13";
 let themeMode="auto";
 try{const s=localStorage.getItem(THEME_KEY);if(s==="auto"||s==="light"||s==="dark")themeMode=s}catch(e){}
 const mqDark=window.matchMedia("(prefers-color-scheme: dark)");
