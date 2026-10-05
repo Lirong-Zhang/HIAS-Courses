@@ -400,6 +400,67 @@ button{font:inherit}
 .ver{font-size:10px;line-height:1.7;color:var(--faint);margin:12px 0 0;font-variant-numeric:tabular-nums}
 .ver b{color:var(--muted);font-weight:800}
 
+/* ===== 分栏：课表 / 健身 =====
+   顶部两个标签切换两套内容，同一时刻只显示一套，互不混排。
+   data-view="sched" 只在课表里显示，"fit" 只在健身里显示，"both" 两边都在（天气/外观）。 */
+.maintabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:0 0 12px}
+.maintabs button{
+  min-width:0;border:1px solid var(--line);background:var(--card-2);color:var(--muted);
+  border-radius:12px;min-height:44px;font-size:13.5px;font-weight:850;
+  transition:background .15s,border-color .15s,color .15s
+}
+.maintabs button.on{background:var(--accent-bg);border-color:var(--accent-line);color:var(--accent-dark)}
+.maintabs button:active{transform:scale(.98)}
+[data-view][hidden]{display:none!important}
+
+/* 健身视图 */
+.fit-day{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.fit-day-name{font-size:17.5px;font-weight:850;line-height:1.3;letter-spacing:-.3px}
+.fit-kind{
+  flex:0 0 auto;font-size:10px;font-weight:850;line-height:1;padding:4px 8px;border-radius:999px;
+  border:1px solid var(--accent-line);background:var(--accent-bg);color:var(--accent-dark)
+}
+.fit-kind.rest{border-color:var(--line);background:var(--surface-3);color:var(--muted)}
+.fit-meta{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:5px}
+.fit-block{margin-top:12px}
+.fit-block-k{font-size:10.5px;font-weight:850;color:var(--accent-dark);letter-spacing:.3px;margin-bottom:6px}
+.exs{display:grid;gap:7px}
+.ex{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:baseline;
+  border:1px solid var(--line);border-radius:12px;padding:9px 11px;background:var(--card-2)
+}
+.ex b{font-size:13px;font-weight:800;line-height:1.35}
+.ex span{display:block;font-size:10.5px;color:var(--muted);line-height:1.5;margin-top:3px}
+.ex .sx{font-size:11.5px;font-weight:850;color:var(--accent-dark);white-space:nowrap;font-variant-numeric:tabular-nums}
+.fit-note{
+  font-size:11px;color:var(--muted);line-height:1.6;
+  margin-top:11px;padding-top:9px;border-top:1px dashed var(--line)
+}
+.fit-week{display:grid;gap:8px}
+.fit-wd{border:1px solid var(--line);border-radius:12px;background:var(--card-2);overflow:hidden}
+.fit-wd>summary{
+  display:flex;justify-content:space-between;gap:10px;align-items:baseline;
+  padding:10px 11px;font-size:12.5px;font-weight:850;cursor:pointer;list-style:none
+}
+.fit-wd>summary::-webkit-details-marker{display:none}
+.fit-wd>summary em{font-style:normal;font-size:10.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+.fit-wd>summary b i{
+  font-style:normal;font-size:10px;font-weight:850;margin-left:7px;padding:3px 7px;border-radius:999px;
+  background:var(--surface-3);color:var(--muted);vertical-align:1px
+}
+.fit-wd.on{border-color:var(--accent-line);background:var(--accent-bg)}
+.fit-wd.on>summary,.fit-wd.on>summary em{color:var(--accent-dark)}
+.fit-wd.on>summary b i{background:var(--badge-on-tint);color:var(--accent-dark)}
+.fit-wd .fit-body{
+  font-size:11.5px;color:var(--muted);line-height:1.7;
+  padding:9px 11px 11px;border-top:1px solid var(--line)
+}
+.fit-wd.on .fit-body{color:var(--text)}
+.fit-wd .fit-body em{font-style:normal;font-weight:800;color:var(--text)}
+.fit-tips{display:grid;gap:9px}
+.fit-tip{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;font-size:11.5px;line-height:1.6}
+.fit-tip i{font-style:normal;font-weight:850;color:var(--accent-dark);white-space:nowrap}
+
 .sheet-mask{
   position:fixed;inset:0;background:var(--mask);z-index:60;
   opacity:0;pointer-events:none;transition:opacity .22s ease
@@ -498,7 +559,13 @@ button{font:inherit}
 <div class="offline" id="offlineBanner">当前离线：仍可查看已经缓存的课表。</div>
 <button class="install" id="installBtn" type="button">安装「HIAS课表」到桌面</button>
 
-<section class="card wx" id="wxCard">
+<!-- 分栏切换：课表 / 健身。同一时刻只显示一套，两边的卡片互不混排。 -->
+<nav class="maintabs" id="mainTabs" aria-label="内容切换">
+  <button type="button" data-tab="sched" class="on">课表</button>
+  <button type="button" data-tab="fit">健身</button>
+</nav>
+
+<section class="card wx" id="wxCard" data-view="both">
   <div class="wx-top">
     <div class="wx-when">
       <b id="dateText">正在读取时间…</b>
@@ -515,7 +582,7 @@ button{font:inherit}
   <div class="wx-tips" id="wxTips"></div>
 </section>
 
-<section class="card hero">
+<section class="card hero" data-view="sched">
   <div class="hero-row">
     <div>
       <div class="big-week" id="weekNo">第 1 周</div>
@@ -535,19 +602,19 @@ button{font:inherit}
 </section>
 
 <div class="today-grid">
-<section class="card">
+<section class="card" data-view="sched">
   <div class="section-title"><h2>今天</h2><span class="badge" id="todayCount">0 门课</span></div>
   <div class="today-events" id="todayEvents"></div>
   <div class="course-list" id="todayCourses"></div>
 </section>
 
-<section class="card">
+<section class="card" data-view="sched">
   <div class="section-title"><h2>日程</h2><span class="badge" id="agendaBadge">—</span></div>
   <div class="agenda" id="agendaList"></div>
   <p class="note">日程按具体日期走，不受教学周限制：报名、比赛、考试、出行这类安排都放这里，也会自动出现在整周课表顶部那一行。</p>
 </section>
 
-<section class="card">
+<section class="card" data-view="sched">
   <div class="section-title"><h2>本周查看</h2><span class="badge" id="viewWeekBadge">第 1 周</span></div>
 
   <div class="week-head">
@@ -577,13 +644,13 @@ button{font:inherit}
 </section>
 </div>
 
-<section class="card">
+<section class="card" data-view="sched">
   <div class="section-title"><h2>全部课程</h2><span class="badge" id="allCourseBadge">8 门</span></div>
   <div class="course-index" id="courseIndex"></div>
   <p class="note">点任意一门课，可以查看课程编码、教学大纲、教材和教师简介。</p>
 </section>
 
-<section class="card">
+<section class="card" data-view="sched">
   <div class="section-title"><h2>颜色图例</h2></div>
   <div class="legend">
     <span class="degree">专业学位课 · 核心课 / 专业课</span>
@@ -598,7 +665,24 @@ button{font:inherit}
   </p>
 </section>
 
-<section class="card">
+<!-- ===== 健身视图（只在这个分栏里显示，和课表完全分开）===== -->
+<section class="card" data-view="fit">
+  <div class="section-title"><h2>今天练什么</h2><span class="badge" id="fitTodayBadge">—</span></div>
+  <div id="fitToday"></div>
+</section>
+
+<section class="card" data-view="fit">
+  <div class="section-title"><h2>本周安排</h2><span class="badge">周一～周日</span></div>
+  <div class="fit-week" id="fitWeek"></div>
+  <p class="note">点任意一天展开动作清单；今天那一栏默认展开并高亮。力量日里动作的先后就是建议的训练顺序。</p>
+</section>
+
+<section class="card" data-view="fit">
+  <div class="section-title"><h2>训练规则</h2><span class="badge">RIR · 双重递增</span></div>
+  <div class="fit-tips" id="fitRules"></div>
+</section>
+
+<section class="card" data-view="both">
   <div class="section-title"><h2>外观</h2><span class="badge" id="themeBadge">跟随系统</span></div>
   <div class="seg" id="themeSeg">
     <button type="button" data-mode="auto">跟随系统</button>
@@ -814,6 +898,122 @@ const EVENTS=[
   {id:"xihu-half",title:"西湖大学半程马拉松",short:"半马",kind:"race",
    from:"2026-10-11",loc:"西湖大学",note:"半程 21.0975 km；枪声时间待定，确定后再改成具体时间。"}
 ];
+
+/* ===== 健身计划（和 cs / EVENTS 并列的第三块数据）=====
+   数据源：Obsidian「02-Areas/健身训练/训练计划-2026-10」＋ 训记模板（含器械替换）。
+   改计划就改这里，改完把 APP_VER 与 sw.js 的 CACHE_NAME 一起 +1。
+   d 用 getDay() 编号（0=周日…6=周六）；s 是组数×次数；t 是要点。 */
+const FIT_WEEK=[
+  {d:1,name:"下肢 A ＋ 跳跃 ＋ 核心",short:"下肢 A",kind:"力量",meta:"约 60～75 分钟",
+   blocks:[
+     {k:"跳跃（放在力量训练之前）",items:[
+       {n:"原地纵跳",s:"3×3",t:"组间休息 60～120 秒；高度明显下降就停，不为完成次数硬跳"},
+       {n:"立定跳远",s:"3×3",t:"追求距离与落地控制，同上"}]},
+     {k:"力量",items:[
+       {n:"史密斯深蹲",s:"4×6～10",t:"RIR 2～3；到区间上限就停，别在同一重量上多做"},
+       {n:"保加利亚分腿蹲",s:"3×8～12/侧",t:"RIR 2～3；先求稳定与膝盖轨迹"},
+       {n:"坐姿腿屈伸",s:"3×10～15",t:"RIR 0～2"},
+       {n:"腿弯举",s:"3×10～15",t:"RIR 0～2"},
+       {n:"史密斯提踵",s:"3×12～20",t:"RIR 0～2"}]},
+     {k:"核心",items:[
+       {n:"腹肌凳负重卷腹",s:"3×10～15",t:""},
+       {n:"Pallof Press",s:"3×10～15/侧",t:"抗旋，重量不是第一指标"}]}]},
+  {d:2,name:"Easy Run",short:"Easy Run",kind:"有氧",meta:"30～40 分钟",
+   blocks:[{k:"",items:[
+       {n:"中低强度连续跑",s:"30～40 分钟",t:"能连续跑并说出短句（RPE 6～7），不看配速"}]}],
+   note:"周一腿部疲劳明显时，改成快走、坡走或椭圆机。"},
+  {d:3,name:"背 ＋ 肩 ＋ 二头 ＋ 单侧推力",short:"上肢拉",kind:"力量",meta:"约 60～75 分钟",
+   blocks:[
+     {k:"背部",items:[
+       {n:"宽距高位下拉",s:"4×8～12",t:"RIR 2～3"},
+       {n:"悍马机划船",s:"4×8～12",t:"替代坐姿划船（健身房没有该器械）"}]},
+     {k:"肩",items:[
+       {n:"哑铃推肩",s:"3×8～12",t:"RIR 2～3"},
+       {n:"面拉",s:"3×12～20",t:"替代反向蝴蝶机，兼顾下斜方与肩外旋"},
+       {n:"哑铃侧平举",s:"3×12～20",t:"RIR 0～2"}]},
+     {k:"二头",items:[{n:"杠铃 / 史密斯弯举",s:"3×8～12",t:""}]},
+     {k:"单侧推力",items:[{n:"单臂绳索前推",s:"3×8～12/侧",t:"分腿站姿，推出时骨盆与胸廓保持朝前"}]}]},
+  {d:4,name:"下肢 B ＋ 横向运动 ＋ 核心",short:"下肢 B",kind:"力量",meta:"约 60～75 分钟",
+   blocks:[
+     {k:"横向运动",items:[
+       {n:"Lateral Bound 侧向跨跳",s:"3×4/侧",t:"重点是快速发力＋落地稳住"},
+       {n:"单脚落地稳定",s:"2×4/侧",t:"落地后控制住再起"}]},
+     {k:"力量",items:[
+       {n:"史密斯罗马尼亚硬拉",s:"4×6～10",t:"屁股向后移动，不是弯腰；下放时大腿后侧要明显被拉长"},
+       {n:"史密斯深蹲",s:"3×8～12",t:""},
+       {n:"反向弓步",s:"3×8～12/侧",t:""},
+       {n:"腿弯举",s:"3×10～15",t:""},
+       {n:"坐姿腿屈伸",s:"2×12～15",t:""},
+       {n:"史密斯提踵",s:"3×12～20",t:""}]},
+     {k:"核心",items:[
+       {n:"Cable Chop 高到低",s:"3×10～15/侧",t:""},
+       {n:"Pallof Press",s:"2×12～15/侧",t:""}]}]},
+  {d:5,name:"胸 ＋ 三头 ＋ 单侧推力 ＋ 核心",short:"上肢推",kind:"力量",meta:"约 60～75 分钟",
+   blocks:[
+     {k:"胸",items:[
+       {n:"史密斯卧推",s:"4×6～10",t:"RIR 2～3"},
+       {n:"史密斯上斜卧推",s:"3×8～12",t:""},
+       {n:"器械推胸",s:"2～3×10～15",t:""}]},
+     {k:"三头",items:[
+       {n:"绳索下压",s:"3×10～15",t:""},
+       {n:"绳索过顶臂屈伸",s:"2～3×10～15",t:""}]},
+     {k:"单侧推力",items:[{n:"单臂绳索前推",s:"2×10～15/侧",t:"不追重量，以稳定与力量传递为主"}]},
+     {k:"核心",items:[{n:"腹肌凳负重卷腹",s:"3×12～20",t:""}]}]},
+  {d:6,name:"Athletic Day",short:"跑跳日",kind:"跑跳",meta:"约 45～70 分钟",
+   blocks:[
+     {k:"热身（8～10 分钟）",items:[
+       {n:"慢跑 · 高抬腿 · 后踢腿 · 弓步走 · 腿摆动 · 踝轻弹跳",s:"一轮",t:"最后加 2～3 次渐进加速跑"}]},
+     {k:"正式训练",items:[
+       {n:"Sprint 加速跑",s:"10 m×3 ＋ 20 m×3",t:"每次之间休息 1～2 分钟；跑速明显下降就结束"},
+       {n:"跳跃",s:"原地纵跳 3×3 ＋ 侧向跳 3×4/侧",t:"追求高度与质量，不做到疲劳"},
+       {n:"收尾 Easy Run",s:"15～25 分钟",t:"当天跑跳量已经很大时可以直接取消"}]}]},
+  {d:0,name:"完全休息",short:"休息",kind:"休息",meta:"不安排力量与正式跑步",
+   blocks:[{k:"",items:[{n:"正常走路、出门、轻松活动",s:"—",t:"睡觉、吃饭，把这周的力量还回去"}]}]}
+];
+const FIT_RULES=[
+  {k:"RIR",t:"储备次数：这一组做完还能再做几次标准动作。RPE 8 = RIR 2、RPE 9 = RIR 1，换算就是 RIR = 10 − RPE。"},
+  {k:"强度",t:"大肌群复合动作（深蹲、RDL、保加利亚、卧推、下拉、划船）RIR 2～3；孤立/辅助动作（腿屈伸、腿弯举、侧平举、弯举、三头、卷腹）RIR 0～2。"},
+  {k:"双重递增",t:"先在固定重量下把次数从区间下限爬到上限、还剩 2～3 下，再加重量、次数退回下限重新爬。到上限就停，别在同一重量上多磨。"},
+  {k:"跑跳",t:"速度、高度或距离明显下降，落地不稳，动作变形 → 停。跑跳追求质量，不追求累。"},
+  {k:"恢复",t:"周均体重降 0.3～0.6 kg 且力量稳定 = 继续；力量连续下降、腿长期沉重、酸痛超 72 小时、关节不适、睡眠变差 → 先减量。"},
+  {k:"饮食",t:"蛋白质约 150 g/天，热量约 2300 kcal/天。"}
+];
+function fitDayOf(d){return FIT_WEEK.find(x=>x.d===d)||FIT_WEEK[FIT_WEEK.length-1]}
+function exHtml(it){
+  return `<div class="ex"><div><b>${esc(it.n)}</b>${it.t?`<span>${esc(it.t)}</span>`:""}</div><div class="sx">${esc(it.s)}</div></div>`;
+}
+function fitBlocksHtml(day){
+  return (day.blocks||[]).map(b=>
+    `<div class="fit-block">${b.k?`<div class="fit-block-k">${esc(b.k)}</div>`:""}<div class="exs">${b.items.map(exHtml).join("")}</div></div>`
+  ).join("");
+}
+function renderFitToday(n){
+  const day=fitDayOf(n.getDay());
+  document.getElementById("fitTodayBadge").textContent=wn[n.getDay()]+" · "+day.short;
+  document.getElementById("fitToday").innerHTML=
+    `<div class="fit-day"><div class="fit-day-name">${esc(day.name)}</div>`+
+    `<div class="fit-kind${day.kind==="休息"?" rest":""}">${esc(day.kind)}</div></div>`+
+    `<div class="fit-meta">${esc(wn[n.getDay()])} · ${esc(day.meta)}</div>`+
+    fitBlocksHtml(day)+
+    (day.note?`<p class="fit-note">${esc(day.note)}</p>`:"");
+}
+function renderFitWeek(){
+  const today=new Date().getDay();
+  document.getElementById("fitWeek").innerHTML=FIT_WEEK.map(day=>{
+    const on=day.d===today;
+    const body=(day.blocks||[]).map(b=>
+      (b.k?`<b>${esc(b.k)}</b>　`:"")+b.items.map(it=>`${esc(it.n)} <em>${esc(it.s)}</em>`).join(" · ")
+    ).join("<br>");
+    return `<details class="fit-wd${on?" on":""}"${on?" open":""}>`+
+      `<summary><b>${esc(wn[day.d])} · ${esc(day.short)}<i>${esc(day.kind)}</i></b><em>${esc(day.meta)}</em></summary>`+
+      `<div class="fit-body">${body}</div></details>`;
+  }).join("");
+}
+function renderFitRules(){
+  document.getElementById("fitRules").innerHTML=FIT_RULES.map(r=>
+    `<div class="fit-tip"><i>${esc(r.k)}</i><div>${esc(r.t)}</div></div>`).join("");
+}
+function renderFit(n){renderFitToday(n);renderFitWeek();renderFitRules()}
 
 const wn=["周日","周一","周二","周三","周四","周五","周六"];
 let viewStart=monday(new Date()),sel=strip(new Date());
@@ -1499,13 +1699,13 @@ function tick(){
   const passed=Math.min(totalDays,Math.max(0,Math.floor((strip(n)-TERM_START)/DAY)+1));
   document.getElementById("termProgress").style.width=(passed/totalDays*100).toFixed(1)+"%";
   const dayKey=+strip(n);
-  if(dayKey!==lastDayKey){lastDayKey=dayKey;renderAgenda();renderEventStrip()}
+  if(dayKey!==lastDayKey){lastDayKey=dayKey;renderAgenda();renderEventStrip();renderFit(n)}
   renderToday(n);renderNow(n)
 }
 /* ============ 外观主题：跟随系统 / 浅色 / 深色 ============ */
 const THEME_KEY="hiasTheme";
 /* 版本号：每次发布都要和 sw.js 的 CACHE_NAME 一起 +1（页面上会显示，用来确认手机上的版本）。 */
-const APP_VER="v13";
+const APP_VER="v14";
 let themeMode="auto";
 try{const s=localStorage.getItem(THEME_KEY);if(s==="auto"||s==="light"||s==="dark")themeMode=s}catch(e){}
 const mqDark=window.matchMedia("(prefers-color-scheme: dark)");
@@ -1549,6 +1749,30 @@ document.getElementById("themeSeg").addEventListener("click",e=>{
 if(mqDark.addEventListener)mqDark.addEventListener("change",()=>{if(themeMode==="auto")syncThemeUI()});
 else if(mqDark.addListener)mqDark.addListener(()=>{if(themeMode==="auto")syncThemeUI()});
 syncThemeUI();
+
+/* ============ 分栏：课表 / 健身 ============ */
+const VIEW_KEY="hiasView";
+let mainView="sched";
+try{const v=localStorage.getItem(VIEW_KEY);if(v==="sched"||v==="fit")mainView=v}catch(e){}
+function syncViewUI(){
+  // 只切 data-view 的卡片，不碰标签按钮自己（按钮用的是 data-tab）。
+  document.querySelectorAll("[data-view]").forEach(el=>{
+    const v=el.dataset.view;
+    el.hidden=!(v===mainView||v==="both");
+  });
+  document.querySelectorAll("#mainTabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===mainView));
+}
+document.getElementById("mainTabs").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-tab]");
+  if(!b||b.dataset.tab===mainView)return;
+  mainView=b.dataset.tab;
+  try{localStorage.setItem(VIEW_KEY,mainView)}catch(err){}
+  syncViewUI();
+  // 整周课表在隐藏状态下量不到宽度，切回课表时重新把「今天」那一列对到中间（只有放大模式需要）。
+  if(mainView==="sched")focusTodayColumn();
+});
+syncViewUI();
+renderFit(new Date());
 
 renderCourseIndex();
 renderStrip();
