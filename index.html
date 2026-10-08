@@ -271,6 +271,8 @@ button{font:inherit}
 .wt-course .wt-meta{font-size:8.5px;opacity:.95;line-height:1.2;white-space:nowrap}
 .wt-course .wt-loc{font-size:8.5px;opacity:.95;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wt-course .wt-locshort{display:none;font-size:8.5px;opacity:.95;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wt-course .wt-sign{font-size:8.5px;font-weight:800;opacity:.95;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sign-line{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:var(--card-2);border:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--text)}
 .wt-course.degree{background:var(--accent-bg);color:var(--accent-dark);border-color:var(--accent-line)}
 .wt-course.pubdegree{background:var(--green-bg);color:var(--green);border-color:var(--green-line)}
 .wt-course.elect{background:var(--purple-bg);color:var(--purple);border-color:var(--purple-line)}
@@ -717,8 +719,8 @@ const cs=[
 {id:"nlp",name:"自然语言处理",day:3,start:6,end:8,weeks:w11_20,credits:3,type:"专业学位课 · 核心课",cls:"degree",loc:"5号楼4层多功能厅",locShort:"5号楼4F"},
 {id:"arch",name:"计算机体系结构",day:1,start:10,end:11,weeks:w3_5_7_18,credits:3,type:"专业学位课 · 核心课",cls:"degree",loc:"13-211",locShort:"13-211"},
 {id:"arch",name:"计算机体系结构",day:2,start:1,end:2,weeks:w3_5_7_18,credits:3,type:"专业学位课 · 核心课",cls:"degree",loc:"13-211",locShort:"13-211"},
-{id:"hpc",name:"并行计算与实现技术",day:4,start:10,end:11,weeks:w9_17_19,credits:2,type:"专业学位课 · 专业课",cls:"degree",loc:"13-310",locShort:"13-310"},
-{id:"hpc",name:"并行计算与实现技术",day:5,start:1,end:2,weeks:w9_17_19,credits:2,type:"专业学位课 · 专业课",cls:"degree",loc:"13-310",locShort:"13-310"},
+{id:"hpc",name:"并行计算与实现技术",day:4,start:10,end:11,weeks:w9_17_19,credits:2,type:"专业学位课 · 专业课",cls:"degree",loc:"13-310",locShort:"13-310",signin:"王子晗"},
+{id:"hpc",name:"并行计算与实现技术",day:5,start:1,end:2,weeks:w9_17_19,credits:2,type:"专业学位课 · 专业课",cls:"degree",loc:"13-310",locShort:"13-310",signin:"王子晗"},
 {id:"db",name:"高级数据库系统",day:2,start:12,end:13,weeks:w11_20,credits:2,type:"专业学位课 · 专业课",cls:"degree",loc:"13-310",locShort:"13-310"},
 {id:"db",name:"高级数据库系统",day:3,start:3,end:4,weeks:w11_20,credits:2,type:"专业学位课 · 专业课",cls:"degree",loc:"13-305",locShort:"13-305"},
 {id:"marx",name:"新时代中国特色社会主义理论与实践",day:5,start:5,end:8,weeks:w6_14,credits:2,type:"公共学位课",cls:"pubdegree",loc:"5号楼4层多功能厅",locShort:"5号楼4F"},
@@ -896,7 +898,9 @@ tennis:{
 const EV_KIND={race:"比赛",exam:"考试",due:"截止",trip:"出行",meet:"约",other:"日程"};
 const EVENTS=[
   {id:"xihu-half",title:"西湖大学半程马拉松",short:"半马",kind:"race",
-   from:"2026-10-11",loc:"西湖大学",note:"半程 21.0975 km；枪声时间待定，确定后再改成具体时间。"}
+   from:"2026-10-11",time:"07:00",loc:"西湖大学云谷校区",note:"半程 21.0975 km；7:00 开跑（5:40–6:35 入场集结），参赛号 A0575。"},
+  {id:"xihu-pickup",title:"马拉松物资领取",short:"领物",kind:"other",
+   from:"2026-10-10",loc:"西湖大学云谷校区 G1 通识教育中心",note:"10:00–21:00 窗口，带报名短信作凭证（参赛号 A0575）；校 4 号门进，地面走东门，车库乘 1/2 号电梯到 1 楼。"}
 ];
 
 /* ===== 健身计划（和 cs / EVENTS 并列的第三块数据）=====
@@ -1303,9 +1307,9 @@ function renderWeekTable(){
       ? `<span class="wt-kind">${shortType(c.type)}</span>
          <strong class="wt-name">${c.name}</strong>
          <small class="wt-meta">${ctime(c)}</small>
-         <small class="wt-loc">${c.locShort}</small>`
+         <small class="wt-loc">${c.locShort}</small>${c.signin?'<small class="wt-sign">✍️ 签到</small>':''}`
       : `<strong class="wt-name">${c.name}</strong>
-         <small class="wt-locshort">${c.locShort}</small>`;
+         <small class="wt-locshort">${c.locShort}</small>${c.signin?'<small class="wt-sign">✍️ 签到</small>':''}`;
     block.addEventListener("click",()=>openSheet(c,d));
     table.appendChild(block);
   });
@@ -1439,6 +1443,8 @@ function openSheet(c,date){
       <div class="nc-l">${esc(c.loc)}</div>
     </div>`;
   }
+
+  if(c.signin){html+='<div class="sign-line">✍️ 每次上课记得帮<b>'+esc(c.signin)+'</b>签到。</div>';}
 
   const ents=entriesOf(c.id);
   html+=`<div class="row"><div class="k">全部上课时间</div><div class="v">${ents.map(e=>`
@@ -1705,7 +1711,7 @@ function tick(){
 /* ============ 外观主题：跟随系统 / 浅色 / 深色 ============ */
 const THEME_KEY="hiasTheme";
 /* 版本号：每次发布都要和 sw.js 的 CACHE_NAME 一起 +1（页面上会显示，用来确认手机上的版本）。 */
-const APP_VER="v14";
+const APP_VER="v15";
 let themeMode="auto";
 try{const s=localStorage.getItem(THEME_KEY);if(s==="auto"||s==="light"||s==="dark")themeMode=s}catch(e){}
 const mqDark=window.matchMedia("(prefers-color-scheme: dark)");
